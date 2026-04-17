@@ -1,0 +1,74 @@
+[
+{
+  "directory": "/home/study/coursework/dbms/build",
+  "command": "/usr/bin/c++  -I/home/study/coursework/dbms/include -std=c++20 -o CMakeFiles/dbms.dir/src/main.cpp.o -c /home/study/coursework/dbms/src/main.cpp",
+  "file": "/home/study/coursework/dbms/src/main.cpp",
+  "output": "CMakeFiles/dbms.dir/src/main.cpp.o"
+},
+{
+  "directory": "/home/study/coursework/dbms/build",
+  "command": "/usr/bin/c++  -I/home/study/coursework/dbms/include -isystem /home/study/coursework/dbms/build/_deps/googletest-src/googletest/include -isystem /home/study/coursework/dbms/build/_deps/googletest-src/googletest -std=c++20 -o CMakeFiles/dbms_tests.dir/tests/b_tree_tests.cpp.o -c /home/study/coursework/dbms/tests/b_tree_tests.cpp",
+  "file": "/home/study/coursework/dbms/tests/b_tree_tests.cpp",
+  "output": "CMakeFiles/dbms_tests.dir/tests/b_tree_tests.cpp.o"
+},
+{
+  "directory": "/home/study/coursework/dbms/build",
+  "command": "/usr/bin/c++  -I/home/study/coursework/dbms/include -isystem /home/study/coursework/dbms/build/_deps/googletest-src/googletest/include -isystem /home/study/coursework/dbms/build/_deps/googletest-src/googletest -std=c++20 -o CMakeFiles/dbms_sql_tests.dir/tests/sql/lexer_tests.cpp.o -c /home/study/coursework/dbms/tests/sql/lexer_tests.cpp",
+  "file": "/home/study/coursework/dbms/tests/sql/lexer_tests.cpp",
+  "output": "CMakeFiles/dbms_sql_tests.dir/tests/sql/lexer_tests.cpp.o"
+},
+{
+  "directory": "/home/study/coursework/dbms/build",
+  "command": "/usr/bin/c++  -I/home/study/coursework/dbms/include -isystem /home/study/coursework/dbms/build/_deps/googletest-src/googletest/include -isystem /home/study/coursework/dbms/build/_deps/googletest-src/googletest -std=c++20 -o CMakeFiles/dbms_sql_tests.dir/tests/sql/parser_tests.cpp.o -c /home/study/coursework/dbms/tests/sql/parser_tests.cpp",
+  "file": "/home/study/coursework/dbms/tests/sql/parser_tests.cpp",
+  "output": "CMakeFiles/dbms_sql_tests.dir/tests/sql/parser_tests.cpp.o"
+},
+{
+  "directory": "/home/study/coursework/dbms/build",
+  "command": "/usr/bin/c++  -I/home/study/coursework/dbms/include -isystem /home/study/coursework/dbms/build/_deps/googletest-src/googletest/include -isystem /home/study/coursework/dbms/build/_deps/googletest-src/googletest -std=c++20 -o CMakeFiles/dbms_sql_tests.dir/tests/sql/executor_tests.cpp.o -c /home/study/coursework/dbms/tests/sql/executor_tests.cpp",
+  "file": "/home/study/coursework/dbms/tests/sql/executor_tests.cpp",
+  "output": "CMakeFiles/dbms_sql_tests.dir/tests/sql/executor_tests.cpp.o"
+},
+{
+  "directory": "/home/study/coursework/dbms/build",
+  "command": "/usr/bin/c++  -I/home/study/coursework/dbms/include -isystem /home/study/coursework/dbms/build/_deps/googletest-src/googletest/include -isystem /home/study/coursework/dbms/build/_deps/googletest-src/googletest -std=c++20 -o CMakeFiles/dbms_sql_tests.dir/src/sql/lexer.cpp.o -c /home/study/coursework/dbms/src/sql/lexer.cpp",
+  "file": "/home/study/coursework/dbms/src/sql/lexer.cpp",
+  "output": "CMakeFiles/dbms_sql_tests.dir/src/sql/lexer.cpp.o"
+},
+{
+  "directory": "/home/study/coursework/dbms/build",
+  "command": "/usr/bin/c++  -I/home/study/coursework/dbms/include -isystem /home/study/coursework/dbms/build/_deps/googletest-src/googletest/include -isystem /home/study/coursework/dbms/build/_deps/googletest-src/googletest -std=c++20 -o CMakeFiles/dbms_sql_tests.dir/src/sql/parser.cpp.o -c /home/study/coursework/dbms/src/sql/parser.cpp",
+  "file": "/home/study/coursework/dbms/src/sql/parser.cpp",
+  "output": "CMakeFiles/dbms_sql_tests.dir/src/sql/parser.cpp.o"
+},
+{
+  "directory": "/home/study/coursework/dbms/build",
+  "command": "/usr/bin/c++  -I/home/study/coursework/dbms/include -isystem /home/study/coursework/dbms/build/_deps/googletest-src/googletest/include -isystem /home/study/coursework/dbms/build/_deps/googletest-src/googletest -std=c++20 -o CMakeFiles/dbms_sql_tests.dir/src/sql/executor.cpp.o -c /home/study/coursework/dbms/src/sql/executor.cpp",
+  "file": "/home/study/coursework/dbms/src/sql/executor.cpp",
+  "output": "CMakeFiles/dbms_sql_tests.dir/src/sql/executor.cpp.o"
+},
+{
+  "directory": "/home/study/coursework/dbms/build/_deps/googletest-build/googlemock",
+  "command": "/usr/bin/c++  -I/home/study/coursework/dbms/build/_deps/googletest-src/googlemock/include -I/home/study/coursework/dbms/build/_deps/googletest-src/googlemock -isystem /home/study/coursework/dbms/build/_deps/googletest-src/googletest/include -isystem /home/study/coursework/dbms/build/_deps/googletest-src/googletest -std=c++20 -Wall -Wshadow -Wundef -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -o CMakeFiles/gmock.dir/src/gmock-all.cc.o -c /home/study/coursework/dbms/build/_deps/googletest-src/googlemock/src/gmock-all.cc",
+  "file": "/home/study/coursework/dbms/build/_deps/googletest-src/googlemock/src/gmock-all.cc",
+  "output": "_deps/googletest-build/googlemock/CMakeFiles/gmock.dir/src/gmock-all.cc.o"
+},
+{
+  "directory": "/home/study/coursework/dbms/build/_deps/googletest-build/googlemock",
+  "command": "/usr/bin/c++  -isystem /home/study/coursework/dbms/build/_deps/googletest-src/googlemock/include -isystem /home/study/coursework/dbms/build/_deps/googletest-src/googlemock -isystem /home/study/coursework/dbms/build/_deps/googletest-src/googletest/include -isystem /home/study/coursework/dbms/build/_deps/googletest-src/googletest -std=c++20 -Wall -Wshadow -Wundef -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -o CMakeFiles/gmock_main.dir/src/gmock_main.cc.o -c /home/study/coursework/dbms/build/_deps/googletest-src/googlemock/src/gmock_main.cc",
+  "file": "/home/study/coursework/dbms/build/_deps/googletest-src/googlemock/src/gmock_main.cc",
+  "output": "_deps/googletest-build/googlemock/CMakeFiles/gmock_main.dir/src/gmock_main.cc.o"
+},
+{
+  "directory": "/home/study/coursework/dbms/build/_deps/googletest-build/googletest",
+  "command": "/usr/bin/c++  -I/home/study/coursework/dbms/build/_deps/googletest-src/googletest/include -I/home/study/coursework/dbms/build/_deps/googletest-src/googletest -std=c++20 -Wall -Wshadow -Wundef -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -o CMakeFiles/gtest.dir/src/gtest-all.cc.o -c /home/study/coursework/dbms/build/_deps/googletest-src/googletest/src/gtest-all.cc",
+  "file": "/home/study/coursework/dbms/build/_deps/googletest-src/googletest/src/gtest-all.cc",
+  "output": "_deps/googletest-build/googletest/CMakeFiles/gtest.dir/src/gtest-all.cc.o"
+},
+{
+  "directory": "/home/study/coursework/dbms/build/_deps/googletest-build/googletest",
+  "command": "/usr/bin/c++  -isystem /home/study/coursework/dbms/build/_deps/googletest-src/googletest/include -isystem /home/study/coursework/dbms/build/_deps/googletest-src/googletest -std=c++20 -Wall -Wshadow -Wundef -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -o CMakeFiles/gtest_main.dir/src/gtest_main.cc.o -c /home/study/coursework/dbms/build/_deps/googletest-src/googletest/src/gtest_main.cc",
+  "file": "/home/study/coursework/dbms/build/_deps/googletest-src/googletest/src/gtest_main.cc",
+  "output": "_deps/googletest-build/googletest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o"
+}
+]

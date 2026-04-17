@@ -1,0 +1,107 @@
+Обзор функций b_tree.h 
+
+Внутренние сравнения
+- compare_keys(lhs, rhs) — сравнивает два ключа через компаратор дерева.
+- compare_pairs(lhs, rhs) — сравнивает пары по ключам.
+
+Узел
+- btree_node::btree_node() — инициализирует пустые контейнеры ключей и указателей.
+
+Аллокатор
+- get_allocator() — возвращает текущий аллокатор.
+
+Внутренние хелперы дерева
+- create_node() — выделяет и конструирует новый узел.
+- destroy_node(node) — разрушает и освобождает узел.
+- clear_node(node) — рекурсивно удаляет поддерево.
+- is_leaf(node) — проверка: у узла нет детей.
+- find_key_index(node, key, found) — ищет позицию ключа в узле и сообщает, найден ли он.
+- split_child(parent, child_index) — делит переполненного ребёнка на два узла и поднимает средний ключ.
+- insert_non_full(node, data, out_node, out_index, inserted) — рекурсивная вставка в узел, который можно расширять.
+- get_predecessor(node, index) — находит предшественника ключа (максимальный в левом поддереве).
+- get_successor(node, index) — находит преемника ключа (минимальный в правом поддереве).
+- merge_children(node, index) — сливает двух детей с ключом из родителя.
+- erase_internal(node, key) — основная рекурсивная логика удаления.
+
+Конструкторы
+- B_tree(cmp, alloc) — создаёт пустое дерево с компаратором и аллокатором.
+- B_tree(alloc, comp) — то же, но другой порядок аргументов.
+- B_tree(begin, end, cmp, alloc) — создаёт дерево и вставляет элементы из диапазона.
+- B_tree(initializer_list, cmp, alloc) — создаёт дерево из списка пар.
+
+Правило пяти
+- ~B_tree() — очищает дерево и освобождает память.
+- B_tree(const B_tree& other) — глубокая копия дерева.
+- operator=(const B_tree& other) — очищает себя и копирует other.
+- B_tree(B_tree&& other) — переносит данные из other.
+- operator=(B_tree&& other) — очищает себя и переносит данные из other.
+
+Итераторы: btree_iterator
+- btree_iterator(path, index) — создаёт итератор с заданным путём и индексом в узле.
+- operator*() — доступ к текущему элементу.
+- operator->() — доступ к текущему элементу как указатель.
+- operator++() — переход к следующему элементу (in-order).
+- operator++(int) — постфиксный переход.
+- operator--() — переход к предыдущему элементу.
+- operator--(int) — постфиксный переход.
+- operator==/!= — сравнение итераторов.
+- depth() — глубина узла в дереве.
+- current_node_keys_count() — количество ключей в текущем узле.
+- is_terminate_node() — является ли итератор end().
+- index() — позиция ключа внутри узла.
+
+Итераторы: btree_const_iterator
+- btree_const_iterator(path, index) — конструктор от пути.
+- btree_const_iterator(btree_iterator) — конструктор из неконстантного.
+- operator* / operator-> / ++ / -- / == / != — то же, но для const.
+- depth / current_node_keys_count / is_terminate_node / index — то же, но для const.
+
+Итераторы: btree_reverse_iterator
+- btree_reverse_iterator(path, index) — создаёт обратный итератор.
+- btree_reverse_iterator(btree_iterator) — конструктор из прямого.
+- operator btree_iterator() — преобразование к прямому итератору.
+- operator* / operator-> / ++ / -- / == / != — обратный обход.
+- depth / current_node_keys_count / is_terminate_node / index — информация о позиции.
+
+Итераторы: btree_const_reverse_iterator
+- btree_const_reverse_iterator(path, index) — конструктор от пути.
+- btree_const_reverse_iterator(btree_reverse_iterator) — из обратного.
+- operator btree_const_iterator() — преобразование к const-итератору.
+- operator* / operator-> / ++ / -- / == / != — обратный обход, const.
+- depth / current_node_keys_count / is_terminate_node / index — информация о позиции.
+
+Доступ к элементам
+- at(key) — вернуть значение по ключу или кинуть исключение.
+- at(key) const — то же, но const.
+- operator[](key) — вернуть значение по ключу, создать по умолчанию если нет.
+- operator[](key&&) — то же, но с перемещением ключа.
+
+Итераторы начала/конца
+- begin/end — прямой обход.
+- begin/end const — const версии.
+- cbegin/cend — константные начала/концы.
+- rbegin/rend — обратный обход.
+- rbegin/rend const — const обратный.
+- crbegin/crend — константный обратный.
+
+Поиск
+- size() — количество элементов.
+- empty() — пустое ли дерево.
+- find(key) / find(key) const — поиск ключа.
+- lower_bound(key) / lower_bound(key) const — первый элемент >= key.
+- upper_bound(key) / upper_bound(key) const — первый элемент > key.
+- contains(key) — есть ли ключ.
+
+Модификаторы
+- clear() — полностью очистить дерево.
+- insert(const tree_data_type&) — вставка копией.
+- insert(tree_data_type&&) — вставка перемещением.
+- emplace(args...) — вставка из аргументов.
+- insert_or_assign(const tree_data_type&) — вставка или замена значения.
+- insert_or_assign(tree_data_type&&) — вставка или замена с перемещением.
+- emplace_or_assign(args...) — вставка или замена из аргументов.
+- erase(iterator) — удалить по итератору.
+- erase(const_iterator) — удалить по const-итератору.
+- erase(beg, end) — удалить диапазон.
+- erase(const_beg, const_end) — удалить диапазон const.
+- erase(key) — удалить по ключу.

@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/dbms_tests.dir/tests/b_tree_tests.cpp.o -o dbms_tests  lib/libgtest.a
