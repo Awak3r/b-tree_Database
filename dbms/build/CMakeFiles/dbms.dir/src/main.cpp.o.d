@@ -158,24 +158,12 @@ CMakeFiles/dbms.dir/src/main.cpp.o: \
  /usr/include/c++/11/bits/istream.tcc \
  /home/study/coursework/dbms/include/dbms/all.h \
  /home/study/coursework/dbms/include/dbms/core/dbms.h \
- /home/study/coursework/dbms/include/dbms/core/catalog.h \
- /usr/include/c++/11/vector /usr/include/c++/11/bits/stl_uninitialized.h \
- /usr/include/c++/11/bits/stl_vector.h \
- /usr/include/c++/11/bits/stl_bvector.h \
- /usr/include/c++/11/bits/vector.tcc \
- /home/study/coursework/dbms/include/dbms/core/database.h \
- /home/study/coursework/dbms/include/dbms/core/table.h \
- /home/study/coursework/dbms/include/dbms/core/schema.h \
- /home/study/coursework/dbms/include/dbms/core/../storage/record.h \
- /usr/include/c++/11/cstddef /usr/include/c++/11/array \
- /usr/include/c++/11/utility /usr/include/c++/11/bits/stl_relops.h \
- /usr/include/c++/11/cstring /usr/include/string.h /usr/include/strings.h \
- /home/study/coursework/dbms/include/dbms/core/../storage/table_page_manager.h \
  /usr/include/c++/11/filesystem /usr/include/c++/11/bits/fs_fwd.h \
  /usr/include/c++/11/chrono /usr/include/c++/11/ratio \
  /usr/include/c++/11/limits /usr/include/c++/11/ctime \
  /usr/include/c++/11/bits/parse_numbers.h \
- /usr/include/c++/11/bits/fs_path.h /usr/include/c++/11/locale \
+ /usr/include/c++/11/bits/fs_path.h /usr/include/c++/11/utility \
+ /usr/include/c++/11/bits/stl_relops.h /usr/include/c++/11/locale \
  /usr/include/c++/11/bits/locale_facets_nonio.h \
  /usr/include/x86_64-linux-gnu/c++/11/bits/time_members.h \
  /usr/include/x86_64-linux-gnu/c++/11/bits/messages_members.h \
@@ -183,7 +171,7 @@ CMakeFiles/dbms.dir/src/main.cpp.o: \
  /usr/include/c++/11/bits/locale_facets_nonio.tcc \
  /usr/include/c++/11/bits/locale_conv.h \
  /usr/include/c++/11/bits/unique_ptr.h /usr/include/c++/11/tuple \
- /usr/include/c++/11/bits/uses_allocator.h \
+ /usr/include/c++/11/array /usr/include/c++/11/bits/uses_allocator.h \
  /usr/include/c++/11/bits/invoke.h /usr/include/c++/11/iomanip \
  /usr/include/c++/11/bits/quoted_string.h /usr/include/c++/11/sstream \
  /usr/include/c++/11/bits/sstream.tcc /usr/include/c++/11/codecvt \
@@ -194,6 +182,20 @@ CMakeFiles/dbms.dir/src/main.cpp.o: \
  /usr/include/c++/11/bits/refwrap.h \
  /usr/include/c++/11/ext/aligned_buffer.h \
  /usr/include/c++/11/bits/fs_dir.h /usr/include/c++/11/bits/fs_ops.h \
+ /home/study/coursework/dbms/include/dbms/core/catalog.h \
+ /usr/include/c++/11/vector /usr/include/c++/11/bits/stl_uninitialized.h \
+ /usr/include/c++/11/bits/stl_vector.h \
+ /usr/include/c++/11/bits/stl_bvector.h \
+ /usr/include/c++/11/bits/vector.tcc \
+ /home/study/coursework/dbms/include/dbms/core/database.h \
+ /home/study/coursework/dbms/include/dbms/core/table.h \
+ /home/study/coursework/dbms/include/dbms/core/schema.h \
+ /home/study/coursework/dbms/include/dbms/core/../storage/record.h \
+ /usr/include/c++/11/cstddef /usr/include/c++/11/cstring \
+ /usr/include/string.h /usr/include/strings.h \
+ /usr/include/c++/11/optional \
+ /usr/include/c++/11/bits/enable_special_members.h \
+ /home/study/coursework/dbms/include/dbms/core/../storage/table_page_manager.h \
  /home/study/coursework/dbms/include/dbms/core/../storage/page.h \
  /home/study/coursework/dbms/include/dbms/core/../storage/storage_format.h \
  /home/study/coursework/dbms/include/dbms/core/../storage/table_storage.h \
@@ -220,4 +222,5 @@ CMakeFiles/dbms.dir/src/main.cpp.o: \
  /home/study/coursework/dbms/include/dbms/index/index_page_manager.h \
  /home/study/coursework/dbms/include/dbms/index/../storage/record.h \
  /home/study/coursework/dbms/include/dbms/index/index_manager.h \
- /home/study/coursework/dbms/include/dbms/index/b_tree_disk_index.h
+ /home/study/coursework/dbms/include/dbms/index/b_tree_disk_index.h \
+ /home/study/coursework/dbms/include/dbms/index/string_key.h

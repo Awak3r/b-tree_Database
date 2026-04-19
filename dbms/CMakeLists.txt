@@ -20,8 +20,17 @@ FetchContent_Declare(
     URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
 )
 
+FetchContent_Declare(
+    nlohmann_json
+    URL https://github.com/nlohmann/json/archive/refs/tags/v3.11.3.zip
+)
+
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
+FetchContent_MakeAvailable(googletest nlohmann_json)
+
+target_link_libraries(dbms_core INTERFACE
+    nlohmann_json::nlohmann_json
+)
 
 add_executable(dbms
     src/main.cpp
@@ -42,6 +51,7 @@ target_include_directories(dbms_tests PRIVATE
 )
 
 target_link_libraries(dbms_tests PRIVATE
+    dbms_core
     GTest::gtest
 )
 
@@ -59,6 +69,7 @@ target_include_directories(dbms_sql_tests PRIVATE
 )
 
 target_link_libraries(dbms_sql_tests PRIVATE
+    dbms_core
     GTest::gtest_main
 )
 

@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/home/study/coursework/dbms/include -isystem /home/study/coursework/dbms/build/_deps/googletest-src/googletest/include -isystem /home/study/coursework/dbms/build/_deps/googletest-src/googletest
+CXX_INCLUDES = -I/home/study/coursework/dbms/include -I/home/study/coursework/dbms/build/_deps/nlohmann_json-src/include -isystem /home/study/coursework/dbms/build/_deps/googletest-src/googletest/include -isystem /home/study/coursework/dbms/build/_deps/googletest-src/googletest
 
 CXX_FLAGS = -std=c++20
 

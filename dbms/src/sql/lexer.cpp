@@ -121,18 +121,31 @@ Token Lexer::read_string()
 Token Lexer::read_symbol()
 {
     char c = _input[_pos];
-    _pos += 1;
+    char next = '\0';
+    if (_pos + 1 < _input.size()) {
+        next = _input[_pos + 1];
+    }
     Token t{};
     t.type = TokenType::symbol;
-    t.text = std::string(1, c);
     t.keyword = Keyword::create_kw;
     t.symbol = c;
+    if ((c == '=' && next == '=') ||
+        (c == '!' && next == '=') ||
+        (c == '<' && next == '=') ||
+        (c == '>' && next == '=')) {
+        t.text = std::string{c, next};
+        _pos += 2;
+        return t;
+    }
+    t.text = std::string(1, c);
+    _pos += 1;
     return t;
 }
 
 bool Lexer::is_symbol(char c)
 {
-    return c == '(' || c == ')' || c == ',' || c == ';';
+    return c == '(' || c == ')' || c == ',' || c == ';' || c == '-' ||
+           c == '*' || c == '=' || c == '!' || c == '<' || c == '>';
 }
 
 bool Lexer::is_whitespace(char c)
@@ -160,6 +173,50 @@ bool Lexer::match_keyword(const std::string& text, Keyword& out_kw)
     }
     if (text == "use") {
         out_kw = Keyword::use_kw;
+        return true;
+    }
+    if (text == "insert") {
+        out_kw = Keyword::insert_kw;
+        return true;
+    }
+    if (text == "into") {
+        out_kw = Keyword::into_kw;
+        return true;
+    }
+    if (text == "select") {
+        out_kw = Keyword::select_kw;
+        return true;
+    }
+    if (text == "from") {
+        out_kw = Keyword::from_kw;
+        return true;
+    }
+    if (text == "where") {
+        out_kw = Keyword::where_kw;
+        return true;
+    }
+    if (text == "as") {
+        out_kw = Keyword::as_kw;
+        return true;
+    }
+    if (text == "between") {
+        out_kw = Keyword::between_kw;
+        return true;
+    }
+    if (text == "and") {
+        out_kw = Keyword::and_kw;
+        return true;
+    }
+    if (text == "like") {
+        out_kw = Keyword::like_kw;
+        return true;
+    }
+    if (text == "value") {
+        out_kw = Keyword::value_kw;
+        return true;
+    }
+    if (text == "values") {
+        out_kw = Keyword::values_kw;
         return true;
     }
     if (text == "table") {

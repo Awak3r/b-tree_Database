@@ -14,6 +14,12 @@ Statement Parser::parse_statement()
     if (match_keyword(Keyword::use_kw)) {
         return parse_use();
     }
+    if (match_keyword(Keyword::insert_kw)) {
+        return parse_insert();
+    }
+    if (match_keyword(Keyword::select_kw)) {
+        return parse_select();
+    }
     throw std::runtime_error("Unexpected token");
 }
 
@@ -106,6 +112,28 @@ Statement Parser::parse_use()
     return stmt;
 }
 
+Statement Parser::parse_insert()
+{
+    expect_keyword(Keyword::into_kw);
+    InsertStmt stmt{};
+    stmt.table_name = parse_name();
+    expect_symbol('(');
+    stmt.columns.push_back(parse_name());
+    while (match_symbol(',')) {
+        stmt.columns.push_back(parse_name());
+    }
+    expect_symbol(')');
+    if (!match_keyword(Keyword::value_kw)) {
+        expect_keyword(Keyword::values_kw);
+    }
+    stmt.rows.push_back(parse_insert_row());
+    while (match_symbol(',')) {
+        stmt.rows.push_back(parse_insert_row());
+    }
+    match_symbol(';');
+    return stmt;
+}
+
 CreateDatabaseStmt Parser::parse_create_database()
 {
     CreateDatabaseStmt stmt{};
@@ -142,6 +170,39 @@ DropTableStmt Parser::parse_drop_table()
     stmt.name = parse_name();
     match_symbol(';');
     return stmt;
+}
+
+std::vector<InsertValue> Parser::parse_insert_row()
+{
+    std::vector<InsertValue> row;
+    expect_symbol('(');
+    row.push_back(parse_insert_value());
+    while (match_symbol(',')) {
+        row.push_back(parse_insert_value());
+    }
+    expect_symbol(')');
+    return row;
+}
+
+InsertValue Parser::parse_insert_value()
+{
+    if (match_keyword(Keyword::null_kw)) {
+        return InsertValue{true, {}};
+    }
+    if (match_symbol('-')) {
+        const Token& n = peek();
+        if (n.type != TokenType::number) {
+            throw std::runtime_error("Expected number after minus");
+        }
+        consume();
+        return InsertValue{false, "-" + n.text};
+    }
+    const Token& t = peek();
+    if (t.type == TokenType::number || t.type == TokenType::string_literal || t.type == TokenType::identifier) {
+        consume();
+        return InsertValue{false, t.text};
+    }
+    throw std::runtime_error("Expected value");
 }
 
 ColumnDef Parser::parse_column_def()
@@ -190,6 +251,111 @@ std::string Parser::parse_type_name()
         return upper;
     }
     throw std::runtime_error("Expected type");
+}
+
+SelectStmt Parser::parse_select()
+{
+    SelectStmt stmt{};
+    stmt.projection = parse_select_projection();
+    expect_keyword(Keyword::from_kw);
+    stmt.table_name = parse_name();
+    if (match_keyword(Keyword::where_kw)) {
+        stmt.where = parse_select_where();
+    } else {
+        stmt.where = std::nullopt;
+    }
+    match_symbol(';');
+    return stmt;
+}
+
+SelectProjection Parser::parse_select_projection()
+{
+    SelectProjection projection{};
+    if (match_symbol('*')) {
+        projection.is_star = true;
+        return projection;
+    }
+
+    projection.is_star = false;
+    projection.items.push_back(parse_select_item());
+    while (match_symbol(',')) {
+        projection.items.push_back(parse_select_item());
+    }
+    return projection;
+}
+
+SelectItem Parser::parse_select_item()
+{
+    SelectItem item{};
+    item.column_name = parse_name();
+    if (match_keyword(Keyword::as_kw)) {
+        item.alias = parse_name();
+    }
+    return item;
+}
+
+Operand Parser::parse_operand()
+{
+    if (match_keyword(Keyword::null_kw)) {
+        return Literal{true, {}};
+    }
+    if (match_symbol('-')) {
+        const Token& n = peek();
+        if (n.type != TokenType::number) {
+            throw std::runtime_error("Expected number after minus");
+        }
+        consume();
+        return Literal{false, "-" + n.text};
+    }
+    const Token& t = peek();
+    if (t.type == TokenType::identifier) {
+        consume();
+        return ColumnRef{t.text};
+    }
+    if (t.type == TokenType::number || t.type == TokenType::string_literal) {
+        consume();
+        return Literal{false, t.text};
+    }
+    throw std::runtime_error("Expected operand");
+}
+
+ComparisonOp Parser::parse_comparison_op()
+{
+    const Token& t = peek();
+    if (t.type != TokenType::symbol) {
+        throw std::runtime_error("Expected comparison operator");
+    }
+    const std::string op = t.text;
+    consume();
+
+    if (op == "==") {
+        return ComparisonOp::eq;
+    }
+    if (op == "!=") {
+        return ComparisonOp::ne;
+    }
+    if (op == "<") {
+        return ComparisonOp::lt;
+    }
+    if (op == ">") {
+        return ComparisonOp::gt;
+    }
+    if (op == "<=") {
+        return ComparisonOp::le;
+    }
+    if (op == ">=") {
+        return ComparisonOp::ge;
+    }
+    throw std::runtime_error("Unsupported comparison operator");
+}
+
+WhereCondition Parser::parse_select_where()
+{
+    WhereComparison where{};
+    where.lhs = parse_operand();
+    where.op = parse_comparison_op();
+    where.rhs = parse_operand();
+    return where;
 }
 
 }

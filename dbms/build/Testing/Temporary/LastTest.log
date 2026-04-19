@@ -1,0 +1,114 @@
+Start testing: Apr 19 21:32 CEST
+----------------------------------------------------------
+1/2 Testing: b_tree_tests
+1/2 Test: b_tree_tests
+Command: "/home/study/coursework/dbms/build/dbms_tests"
+Directory: /home/study/coursework/dbms/build
+"b_tree_tests" start time: Apr 19 21:32 CEST
+Output:
+----------------------------------------------------------
+[==========] Running 6 tests from 2 test suites.
+[----------] Global test environment set-up.
+[----------] 5 tests from bTreeDiskIndexPositiveTests
+[ RUN      ] bTreeDiskIndexPositiveTests.test0
+[       OK ] bTreeDiskIndexPositiveTests.test0 (0 ms)
+[ RUN      ] bTreeDiskIndexPositiveTests.test1
+[       OK ] bTreeDiskIndexPositiveTests.test1 (1 ms)
+[ RUN      ] bTreeDiskIndexPositiveTests.test2
+[       OK ] bTreeDiskIndexPositiveTests.test2 (1 ms)
+[ RUN      ] bTreeDiskIndexPositiveTests.test3
+[       OK ] bTreeDiskIndexPositiveTests.test3 (0 ms)
+[ RUN      ] bTreeDiskIndexPositiveTests.test4
+[       OK ] bTreeDiskIndexPositiveTests.test4 (0 ms)
+[----------] 5 tests from bTreeDiskIndexPositiveTests (4 ms total)
+
+[----------] 1 test from bTreeDiskIndexNegativeTests
+[ RUN      ] bTreeDiskIndexNegativeTests.test1
+[       OK ] bTreeDiskIndexNegativeTests.test1 (0 ms)
+[----------] 1 test from bTreeDiskIndexNegativeTests (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 6 tests from 2 test suites ran. (4 ms total)
+[  PASSED  ] 6 tests.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"b_tree_tests" end time: Apr 19 21:32 CEST
+"b_tree_tests" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/2 Testing: sql_lexer_tests
+2/2 Test: sql_lexer_tests
+Command: "/home/study/coursework/dbms/build/dbms_sql_tests"
+Directory: /home/study/coursework/dbms/build
+"sql_lexer_tests" start time: Apr 19 21:32 CEST
+Output:
+----------------------------------------------------------
+[==========] Running 22 tests from 3 test suites.
+[----------] Global test environment set-up.
+[----------] 5 tests from lexerTests
+[ RUN      ] lexerTests.createTable
+[       OK ] lexerTests.createTable (0 ms)
+[ RUN      ] lexerTests.stringLiteral
+[       OK ] lexerTests.stringLiteral (0 ms)
+[ RUN      ] lexerTests.insert
+[       OK ] lexerTests.insert (0 ms)
+[ RUN      ] lexerTests.selectKeywords
+[       OK ] lexerTests.selectKeywords (0 ms)
+[ RUN      ] lexerTests.comparisonOperators
+[       OK ] lexerTests.comparisonOperators (0 ms)
+[----------] 5 tests from lexerTests (0 ms total)
+
+[----------] 5 tests from parserTests
+[ RUN      ] parserTests.createTable
+[       OK ] parserTests.createTable (0 ms)
+[ RUN      ] parserTests.dropTable
+[       OK ] parserTests.dropTable (0 ms)
+[ RUN      ] parserTests.insert
+[       OK ] parserTests.insert (0 ms)
+[ RUN      ] parserTests.selectStar
+[       OK ] parserTests.selectStar (0 ms)
+[ RUN      ] parserTests.selectWithAliasAndWhereComparison
+[       OK ] parserTests.selectWithAliasAndWhereComparison (0 ms)
+[----------] 5 tests from parserTests (0 ms total)
+
+[----------] 12 tests from executorTests
+[ RUN      ] executorTests.createDropUse
+[       OK ] executorTests.createDropUse (0 ms)
+[ RUN      ] executorTests.duplicateDatabase
+[       OK ] executorTests.duplicateDatabase (0 ms)
+[ RUN      ] executorTests.createDropTable
+[       OK ] executorTests.createDropTable (0 ms)
+[ RUN      ] executorTests.createTableWithoutDb
+[       OK ] executorTests.createTableWithoutDb (0 ms)
+[ RUN      ] executorTests.invalidColumnType
+[       OK ] executorTests.invalidColumnType (0 ms)
+[ RUN      ] executorTests.insertWithIndexedAndNotNull
+[       OK ] executorTests.insertWithIndexedAndNotNull (0 ms)
+[ RUN      ] executorTests.insertWithStringIndexed
+[       OK ] executorTests.insertWithStringIndexed (0 ms)
+[ RUN      ] executorTests.selectStarWithWhereBuildsJson
+[       OK ] executorTests.selectStarWithWhereBuildsJson (0 ms)
+[ RUN      ] executorTests.selectProjectionAliasBuildsJson
+[       OK ] executorTests.selectProjectionAliasBuildsJson (0 ms)
+[ RUN      ] executorTests.selectIndexedIntEqualityAndRange
+[       OK ] executorTests.selectIndexedIntEqualityAndRange (0 ms)
+[ RUN      ] executorTests.selectIndexedIntWithLiteralOnLeft
+[       OK ] executorTests.selectIndexedIntWithLiteralOnLeft (0 ms)
+[ RUN      ] executorTests.selectFailsForUnknownProjectionColumn
+[       OK ] executorTests.selectFailsForUnknownProjectionColumn (0 ms)
+[----------] 12 tests from executorTests (6 ms total)
+
+[----------] Global test environment tear-down
+[==========] 22 tests from 3 test suites ran. (6 ms total)
+[  PASSED  ] 22 tests.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"sql_lexer_tests" end time: Apr 19 21:32 CEST
+"sql_lexer_tests" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Apr 19 21:32 CEST

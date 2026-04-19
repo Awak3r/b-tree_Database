@@ -45,10 +45,10 @@ cmake_force:
 SHELL = /bin/sh
 
 # The CMake executable.
-CMAKE_COMMAND = /root/.local/lib/python3.10/site-packages/cmake/data/bin/cmake
+CMAKE_COMMAND = /usr/local/lib/python3.10/dist-packages/cmake/data/bin/cmake
 
 # The command to remove a file.
-RM = /root/.local/lib/python3.10/site-packages/cmake/data/bin/cmake -E rm -f
+RM = /usr/local/lib/python3.10/dist-packages/cmake/data/bin/cmake -E rm -f
 
 # Escaping for special characters.
 EQUALS = =
@@ -67,6 +67,7 @@ all: CMakeFiles/dbms.dir/all
 all: CMakeFiles/dbms_tests.dir/all
 all: CMakeFiles/dbms_sql_tests.dir/all
 all: _deps/googletest-build/all
+all: _deps/nlohmann_json-build/all
 .PHONY : all
 
 # The main recursive "codegen" target.
@@ -74,10 +75,12 @@ codegen: CMakeFiles/dbms.dir/codegen
 codegen: CMakeFiles/dbms_tests.dir/codegen
 codegen: CMakeFiles/dbms_sql_tests.dir/codegen
 codegen: _deps/googletest-build/codegen
+codegen: _deps/nlohmann_json-build/codegen
 .PHONY : codegen
 
 # The main recursive "preinstall" target.
 preinstall: _deps/googletest-build/preinstall
+preinstall: _deps/nlohmann_json-build/preinstall
 .PHONY : preinstall
 
 # The main recursive "clean" target.
@@ -85,6 +88,7 @@ clean: CMakeFiles/dbms.dir/clean
 clean: CMakeFiles/dbms_tests.dir/clean
 clean: CMakeFiles/dbms_sql_tests.dir/clean
 clean: _deps/googletest-build/clean
+clean: _deps/nlohmann_json-build/clean
 .PHONY : clean
 
 #=============================================================================
@@ -152,6 +156,25 @@ _deps/googletest-build/googletest/preinstall:
 _deps/googletest-build/googletest/clean: _deps/googletest-build/googletest/CMakeFiles/gtest.dir/clean
 _deps/googletest-build/googletest/clean: _deps/googletest-build/googletest/CMakeFiles/gtest_main.dir/clean
 .PHONY : _deps/googletest-build/googletest/clean
+
+#=============================================================================
+# Directory level rules for directory _deps/nlohmann_json-build
+
+# Recursive "all" directory target.
+_deps/nlohmann_json-build/all:
+.PHONY : _deps/nlohmann_json-build/all
+
+# Recursive "codegen" directory target.
+_deps/nlohmann_json-build/codegen:
+.PHONY : _deps/nlohmann_json-build/codegen
+
+# Recursive "preinstall" directory target.
+_deps/nlohmann_json-build/preinstall:
+.PHONY : _deps/nlohmann_json-build/preinstall
+
+# Recursive "clean" directory target.
+_deps/nlohmann_json-build/clean:
+.PHONY : _deps/nlohmann_json-build/clean
 
 #=============================================================================
 # Target rules for target CMakeFiles/dbms.dir

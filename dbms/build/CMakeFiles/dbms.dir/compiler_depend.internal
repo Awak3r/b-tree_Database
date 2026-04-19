@@ -21,6 +21,7 @@ CMakeFiles/dbms.dir/src/main.cpp.o
  /home/study/coursework/dbms/include/dbms/index/b_tree_disk_index.h
  /home/study/coursework/dbms/include/dbms/index/index_manager.h
  /home/study/coursework/dbms/include/dbms/index/index_page_manager.h
+ /home/study/coursework/dbms/include/dbms/index/string_key.h
  /home/study/coursework/dbms/include/dbms/storage/page.h
  /home/study/coursework/dbms/include/dbms/storage/record.h
  /home/study/coursework/dbms/include/dbms/storage/record_codec.h
@@ -47,6 +48,7 @@ CMakeFiles/dbms.dir/src/main.cpp.o
  /usr/include/c++/11/bits/cpp_type_traits.h
  /usr/include/c++/11/bits/cxxabi_forced.h
  /usr/include/c++/11/bits/cxxabi_init_exception.h
+ /usr/include/c++/11/bits/enable_special_members.h
  /usr/include/c++/11/bits/exception.h
  /usr/include/c++/11/bits/exception_defines.h
  /usr/include/c++/11/bits/exception_ptr.h
@@ -149,6 +151,7 @@ CMakeFiles/dbms.dir/src/main.cpp.o
  /usr/include/c++/11/locale
  /usr/include/c++/11/new
  /usr/include/c++/11/numbers
+ /usr/include/c++/11/optional
  /usr/include/c++/11/ostream
  /usr/include/c++/11/pstl/pstl_config.h
  /usr/include/c++/11/ratio

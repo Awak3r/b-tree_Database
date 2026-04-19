@@ -33,12 +33,21 @@ private:
     Statement parse_create();
     Statement parse_drop();
     Statement parse_use();
+    Statement parse_insert();
     CreateTableStmt parse_create_table();
     DropTableStmt parse_drop_table();
     CreateDatabaseStmt parse_create_database();
     DropDatabaseStmt parse_drop_database();
     ColumnDef parse_column_def();
+    std::vector<InsertValue> parse_insert_row();
+    InsertValue parse_insert_value();
     std::string parse_type_name();
+    SelectStmt parse_select();
+    SelectProjection parse_select_projection();
+    SelectItem parse_select_item();
+    Operand parse_operand();
+    ComparisonOp parse_comparison_op();
+    WhereCondition parse_select_where();
 };
 
 }

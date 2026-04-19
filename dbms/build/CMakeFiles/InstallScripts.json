@@ -4,7 +4,8 @@
 		"/home/study/coursework/dbms/build/cmake_install.cmake",
 		"/home/study/coursework/dbms/build/_deps/googletest-build/cmake_install.cmake",
 		"/home/study/coursework/dbms/build/_deps/googletest-build/googlemock/cmake_install.cmake",
-		"/home/study/coursework/dbms/build/_deps/googletest-build/googletest/cmake_install.cmake"
+		"/home/study/coursework/dbms/build/_deps/googletest-build/googletest/cmake_install.cmake",
+		"/home/study/coursework/dbms/build/_deps/nlohmann_json-build/cmake_install.cmake"
 	],
 	"Parallel" : false
 }

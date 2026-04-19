@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <array>
 #include <cstring>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -36,12 +37,20 @@ struct Rid
 class Record
 {
 public:
-    explicit Record(std::vector<std::string> values = {}) : _values(std::move(values)) {}
+    using value_type = std::optional<std::string>;
+    explicit Record(std::vector<value_type> values = {}) : _values(std::move(values)) {}
+    explicit Record(std::vector<std::string> values)
+    {
+        _values.reserve(values.size());
+        for (auto& value : values) {
+            _values.emplace_back(std::move(value));
+        }
+    }
 
-    const std::vector<std::string>& values() const { return _values; }
+    const std::vector<value_type>& values() const { return _values; }
 
 private:
-    std::vector<std::string> _values;
+    std::vector<value_type> _values;
 };
 
 }

@@ -150,9 +150,9 @@ CMakeFiles/dbms_sql_tests.dir/src/sql/parser.cpp.o: \
  /usr/include/c++/11/bits/stl_bvector.h \
  /usr/include/c++/11/bits/vector.tcc \
  /home/study/coursework/dbms/include/dbms/sql/statements.h \
- /usr/include/c++/11/variant \
+ /usr/include/c++/11/optional \
  /usr/include/c++/11/bits/enable_special_members.h \
- /usr/include/c++/11/bits/invoke.h \
+ /usr/include/c++/11/variant /usr/include/c++/11/bits/invoke.h \
  /usr/include/c++/11/ext/aligned_buffer.h \
  /usr/include/c++/11/bits/parse_numbers.h \
  /home/study/coursework/dbms/include/dbms/sql/token.h

@@ -14,5 +14,6 @@
 #include "index/index_page_manager.h"
 #include "index/b_tree_disk_index.h"
 #include "index/index_manager.h"
+#include "index/string_key.h"
 
 #endif
