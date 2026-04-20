@@ -20,6 +20,9 @@ Statement Parser::parse_statement()
     if (match_keyword(Keyword::select_kw)) {
         return parse_select();
     }
+    if (match_keyword(Keyword::update_kw)) {
+        return parse_update();
+    }
     throw std::runtime_error("Unexpected token");
 }
 
@@ -356,6 +359,36 @@ WhereCondition Parser::parse_select_where()
     where.op = parse_comparison_op();
     where.rhs = parse_operand();
     return where;
+}
+
+Statement Parser::parse_update()
+{
+    UpdateStmt stmt{};
+    stmt.table_name = parse_name();
+    expect_keyword(Keyword::set_kw);
+
+    UpdateAssignment first{};
+    first.column_name = parse_name();
+    expect_symbol('=');
+    first.value = parse_insert_value();
+    stmt.assignments.push_back(std::move(first));
+
+    while (match_symbol(',')) {
+        UpdateAssignment next{};
+        next.column_name = parse_name();
+        expect_symbol('=');
+        next.value = parse_insert_value();
+        stmt.assignments.push_back(std::move(next));
+    }
+
+    if (match_keyword(Keyword::where_kw)) {
+        stmt.where = parse_select_where();
+    } else {
+        stmt.where = std::nullopt;
+    }
+
+    match_symbol(';');
+    return stmt;
 }
 
 }

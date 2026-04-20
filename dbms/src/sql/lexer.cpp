@@ -187,6 +187,14 @@ bool Lexer::match_keyword(const std::string& text, Keyword& out_kw)
         out_kw = Keyword::select_kw;
         return true;
     }
+    if (text == "update") {
+        out_kw = Keyword::update_kw;
+        return true;
+    }
+    if (text == "set") {
+        out_kw = Keyword::set_kw;
+        return true;
+    }
     if (text == "from") {
         out_kw = Keyword::from_kw;
         return true;

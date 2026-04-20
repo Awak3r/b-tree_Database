@@ -7,6 +7,30 @@
 },
 {
   "directory": "/home/study/coursework/dbms/build",
+  "command": "/usr/bin/c++  -I/home/study/coursework/dbms/include -I/home/study/coursework/dbms/build/_deps/nlohmann_json-src/include -std=c++20 -o CMakeFiles/dbms.dir/src/sql/lexer.cpp.o -c /home/study/coursework/dbms/src/sql/lexer.cpp",
+  "file": "/home/study/coursework/dbms/src/sql/lexer.cpp",
+  "output": "CMakeFiles/dbms.dir/src/sql/lexer.cpp.o"
+},
+{
+  "directory": "/home/study/coursework/dbms/build",
+  "command": "/usr/bin/c++  -I/home/study/coursework/dbms/include -I/home/study/coursework/dbms/build/_deps/nlohmann_json-src/include -std=c++20 -o CMakeFiles/dbms.dir/src/sql/parser.cpp.o -c /home/study/coursework/dbms/src/sql/parser.cpp",
+  "file": "/home/study/coursework/dbms/src/sql/parser.cpp",
+  "output": "CMakeFiles/dbms.dir/src/sql/parser.cpp.o"
+},
+{
+  "directory": "/home/study/coursework/dbms/build",
+  "command": "/usr/bin/c++  -I/home/study/coursework/dbms/include -I/home/study/coursework/dbms/build/_deps/nlohmann_json-src/include -std=c++20 -o CMakeFiles/dbms.dir/src/sql/executor.cpp.o -c /home/study/coursework/dbms/src/sql/executor.cpp",
+  "file": "/home/study/coursework/dbms/src/sql/executor.cpp",
+  "output": "CMakeFiles/dbms.dir/src/sql/executor.cpp.o"
+},
+{
+  "directory": "/home/study/coursework/dbms/build",
+  "command": "/usr/bin/c++  -I/home/study/coursework/dbms/include -I/home/study/coursework/dbms/build/_deps/nlohmann_json-src/include -std=c++20 -o CMakeFiles/dbms.dir/src/sql/sql_api.cpp.o -c /home/study/coursework/dbms/src/sql/sql_api.cpp",
+  "file": "/home/study/coursework/dbms/src/sql/sql_api.cpp",
+  "output": "CMakeFiles/dbms.dir/src/sql/sql_api.cpp.o"
+},
+{
+  "directory": "/home/study/coursework/dbms/build",
   "command": "/usr/bin/c++  -I/home/study/coursework/dbms/include -I/home/study/coursework/dbms/build/_deps/nlohmann_json-src/include -isystem /home/study/coursework/dbms/build/_deps/googletest-src/googletest/include -isystem /home/study/coursework/dbms/build/_deps/googletest-src/googletest -std=c++20 -o CMakeFiles/dbms_tests.dir/tests/b_tree_tests.cpp.o -c /home/study/coursework/dbms/tests/b_tree_tests.cpp",
   "file": "/home/study/coursework/dbms/tests/b_tree_tests.cpp",
   "output": "CMakeFiles/dbms_tests.dir/tests/b_tree_tests.cpp.o"

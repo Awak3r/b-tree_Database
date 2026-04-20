@@ -123,6 +123,19 @@ struct SelectStmt
     std::optional<WhereCondition> where; // нет WHERE => nullopt
 };
 
+struct UpdateAssignment
+{
+    std::string column_name;
+    InsertValue value;
+};
+
+struct UpdateStmt
+{
+    std::string table_name;
+    std::vector<UpdateAssignment> assignments;
+    std::optional<WhereCondition> where;
+};
+
 using Statement = std::variant<
     CreateDatabaseStmt,
     DropDatabaseStmt,
@@ -130,7 +143,8 @@ using Statement = std::variant<
     CreateTableStmt,
     DropTableStmt,
     InsertStmt,
-    SelectStmt>;
+    SelectStmt,
+    UpdateStmt>;
 
 } // namespace dbms
 

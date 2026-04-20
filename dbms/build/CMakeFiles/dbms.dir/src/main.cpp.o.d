@@ -156,7 +156,6 @@ CMakeFiles/dbms.dir/src/main.cpp.o: \
  /usr/include/c++/11/bits/basic_ios.tcc \
  /usr/include/c++/11/bits/ostream.tcc /usr/include/c++/11/istream \
  /usr/include/c++/11/bits/istream.tcc \
- /home/study/coursework/dbms/include/dbms/all.h \
  /home/study/coursework/dbms/include/dbms/core/dbms.h \
  /usr/include/c++/11/filesystem /usr/include/c++/11/bits/fs_fwd.h \
  /usr/include/c++/11/chrono /usr/include/c++/11/ratio \
@@ -204,23 +203,8 @@ CMakeFiles/dbms.dir/src/main.cpp.o: \
  /usr/include/x86_64-linux-gnu/c++/11/bits/c++io.h \
  /usr/include/c++/11/bits/fstream.tcc \
  /home/study/coursework/dbms/include/dbms/core/../storage/../core/schema.h \
- /home/study/coursework/dbms/include/dbms/core/catalog.h \
- /home/study/coursework/dbms/include/dbms/core/database.h \
- /home/study/coursework/dbms/include/dbms/core/table.h \
- /home/study/coursework/dbms/include/dbms/storage/record.h \
- /home/study/coursework/dbms/include/dbms/storage/storage_format.h \
- /home/study/coursework/dbms/include/dbms/storage/page.h \
- /home/study/coursework/dbms/include/dbms/storage/record_codec.h \
- /home/study/coursework/dbms/include/dbms/storage/record.h \
- /home/study/coursework/dbms/include/dbms/storage/storage_format.h \
- /home/study/coursework/dbms/include/dbms/storage/table_storage.h \
- /home/study/coursework/dbms/include/dbms/storage/table_page_manager.h \
- /home/study/coursework/dbms/include/dbms/index/index_page_manager.h \
- /home/study/coursework/dbms/include/dbms/index/../storage/page.h \
- /home/study/coursework/dbms/include/dbms/index/../storage/table_storage.h \
- /home/study/coursework/dbms/include/dbms/index/b_tree_disk_index.h \
- /home/study/coursework/dbms/include/dbms/index/index_page_manager.h \
- /home/study/coursework/dbms/include/dbms/index/../storage/record.h \
- /home/study/coursework/dbms/include/dbms/index/index_manager.h \
- /home/study/coursework/dbms/include/dbms/index/b_tree_disk_index.h \
- /home/study/coursework/dbms/include/dbms/index/string_key.h
+ /home/study/coursework/dbms/include/dbms/sql/sql_api.h \
+ /home/study/coursework/dbms/include/dbms/sql/executor.h \
+ /home/study/coursework/dbms/include/dbms/sql/statements.h \
+ /usr/include/c++/11/variant \
+ /home/study/coursework/dbms/include/dbms/sql/../core/dbms.h

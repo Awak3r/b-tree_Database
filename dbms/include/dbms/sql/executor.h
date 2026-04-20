@@ -39,6 +39,7 @@ private:
     bool execute_drop_table(const DropTableStmt& stmt);
     bool execute_insert(const InsertStmt& stmt);
     bool execute_select(const SelectStmt& stmt);
+    bool execute_update(const UpdateStmt& stmt);
 
     Database* find_current_database();
     static Table* find_table(Database& db, const std::string& table_name);

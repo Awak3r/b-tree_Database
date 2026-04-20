@@ -34,6 +34,7 @@ private:
     Statement parse_drop();
     Statement parse_use();
     Statement parse_insert();
+    Statement parse_update();
     CreateTableStmt parse_create_table();
     DropTableStmt parse_drop_table();
     CreateDatabaseStmt parse_create_database();

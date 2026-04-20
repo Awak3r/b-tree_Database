@@ -86,17 +86,81 @@ CMakeFiles/dbms.dir/src/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/dbms.dir/src/main.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/study/coursework/dbms/src/main.cpp -o CMakeFiles/dbms.dir/src/main.cpp.s
 
+CMakeFiles/dbms.dir/src/sql/lexer.cpp.o: CMakeFiles/dbms.dir/flags.make
+CMakeFiles/dbms.dir/src/sql/lexer.cpp.o: /home/study/coursework/dbms/src/sql/lexer.cpp
+CMakeFiles/dbms.dir/src/sql/lexer.cpp.o: CMakeFiles/dbms.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/study/coursework/dbms/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/dbms.dir/src/sql/lexer.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/dbms.dir/src/sql/lexer.cpp.o -MF CMakeFiles/dbms.dir/src/sql/lexer.cpp.o.d -o CMakeFiles/dbms.dir/src/sql/lexer.cpp.o -c /home/study/coursework/dbms/src/sql/lexer.cpp
+
+CMakeFiles/dbms.dir/src/sql/lexer.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/dbms.dir/src/sql/lexer.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/study/coursework/dbms/src/sql/lexer.cpp > CMakeFiles/dbms.dir/src/sql/lexer.cpp.i
+
+CMakeFiles/dbms.dir/src/sql/lexer.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/dbms.dir/src/sql/lexer.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/study/coursework/dbms/src/sql/lexer.cpp -o CMakeFiles/dbms.dir/src/sql/lexer.cpp.s
+
+CMakeFiles/dbms.dir/src/sql/parser.cpp.o: CMakeFiles/dbms.dir/flags.make
+CMakeFiles/dbms.dir/src/sql/parser.cpp.o: /home/study/coursework/dbms/src/sql/parser.cpp
+CMakeFiles/dbms.dir/src/sql/parser.cpp.o: CMakeFiles/dbms.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/study/coursework/dbms/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/dbms.dir/src/sql/parser.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/dbms.dir/src/sql/parser.cpp.o -MF CMakeFiles/dbms.dir/src/sql/parser.cpp.o.d -o CMakeFiles/dbms.dir/src/sql/parser.cpp.o -c /home/study/coursework/dbms/src/sql/parser.cpp
+
+CMakeFiles/dbms.dir/src/sql/parser.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/dbms.dir/src/sql/parser.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/study/coursework/dbms/src/sql/parser.cpp > CMakeFiles/dbms.dir/src/sql/parser.cpp.i
+
+CMakeFiles/dbms.dir/src/sql/parser.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/dbms.dir/src/sql/parser.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/study/coursework/dbms/src/sql/parser.cpp -o CMakeFiles/dbms.dir/src/sql/parser.cpp.s
+
+CMakeFiles/dbms.dir/src/sql/executor.cpp.o: CMakeFiles/dbms.dir/flags.make
+CMakeFiles/dbms.dir/src/sql/executor.cpp.o: /home/study/coursework/dbms/src/sql/executor.cpp
+CMakeFiles/dbms.dir/src/sql/executor.cpp.o: CMakeFiles/dbms.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/study/coursework/dbms/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/dbms.dir/src/sql/executor.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/dbms.dir/src/sql/executor.cpp.o -MF CMakeFiles/dbms.dir/src/sql/executor.cpp.o.d -o CMakeFiles/dbms.dir/src/sql/executor.cpp.o -c /home/study/coursework/dbms/src/sql/executor.cpp
+
+CMakeFiles/dbms.dir/src/sql/executor.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/dbms.dir/src/sql/executor.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/study/coursework/dbms/src/sql/executor.cpp > CMakeFiles/dbms.dir/src/sql/executor.cpp.i
+
+CMakeFiles/dbms.dir/src/sql/executor.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/dbms.dir/src/sql/executor.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/study/coursework/dbms/src/sql/executor.cpp -o CMakeFiles/dbms.dir/src/sql/executor.cpp.s
+
+CMakeFiles/dbms.dir/src/sql/sql_api.cpp.o: CMakeFiles/dbms.dir/flags.make
+CMakeFiles/dbms.dir/src/sql/sql_api.cpp.o: /home/study/coursework/dbms/src/sql/sql_api.cpp
+CMakeFiles/dbms.dir/src/sql/sql_api.cpp.o: CMakeFiles/dbms.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/study/coursework/dbms/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/dbms.dir/src/sql/sql_api.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/dbms.dir/src/sql/sql_api.cpp.o -MF CMakeFiles/dbms.dir/src/sql/sql_api.cpp.o.d -o CMakeFiles/dbms.dir/src/sql/sql_api.cpp.o -c /home/study/coursework/dbms/src/sql/sql_api.cpp
+
+CMakeFiles/dbms.dir/src/sql/sql_api.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/dbms.dir/src/sql/sql_api.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/study/coursework/dbms/src/sql/sql_api.cpp > CMakeFiles/dbms.dir/src/sql/sql_api.cpp.i
+
+CMakeFiles/dbms.dir/src/sql/sql_api.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/dbms.dir/src/sql/sql_api.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/study/coursework/dbms/src/sql/sql_api.cpp -o CMakeFiles/dbms.dir/src/sql/sql_api.cpp.s
+
 # Object files for target dbms
 dbms_OBJECTS = \
-"CMakeFiles/dbms.dir/src/main.cpp.o"
+"CMakeFiles/dbms.dir/src/main.cpp.o" \
+"CMakeFiles/dbms.dir/src/sql/lexer.cpp.o" \
+"CMakeFiles/dbms.dir/src/sql/parser.cpp.o" \
+"CMakeFiles/dbms.dir/src/sql/executor.cpp.o" \
+"CMakeFiles/dbms.dir/src/sql/sql_api.cpp.o"
 
 # External object files for target dbms
 dbms_EXTERNAL_OBJECTS =
 
 prog: CMakeFiles/dbms.dir/src/main.cpp.o
+prog: CMakeFiles/dbms.dir/src/sql/lexer.cpp.o
+prog: CMakeFiles/dbms.dir/src/sql/parser.cpp.o
+prog: CMakeFiles/dbms.dir/src/sql/executor.cpp.o
+prog: CMakeFiles/dbms.dir/src/sql/sql_api.cpp.o
 prog: CMakeFiles/dbms.dir/build.make
 prog: CMakeFiles/dbms.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/study/coursework/dbms/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable prog"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/study/coursework/dbms/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Linking CXX executable prog"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/dbms.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

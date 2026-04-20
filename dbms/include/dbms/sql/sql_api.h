@@ -1,30 +1,32 @@
+#ifndef COURSEWORK_DBMS_SQL_API_H
+#define COURSEWORK_DBMS_SQL_API_H
 
+#include <string>
 
-#include <algorithm>
-#include <charconv>
-#include <filesystem>
-#include <system_error>
-#include <unordered_map>
-#include <unordered_set>
-#include "executor.h"
+#include "dbms/sql/executor.h"
 
 namespace dbms
 {
 
-struct SqlResponse {
+struct SqlResponse
+{
     bool ok = false;
     bool is_select = false;
-    std::string json;   // только для SELECT
-    std::string error;  // текст ошибки
+    std::string json;
+    std::string error;
 };
 
-class SqlApi {
+class SqlApi
+{
 public:
     explicit SqlApi(Dbms& dbms) : _exec(dbms) {}
+
     SqlResponse execute_sql(const std::string& sql);
+
 private:
-    Executor _exec; // держим сессию, чтобы USE сохранялся между вызовами
+    Executor _exec;
 };
 
-
 }
+
+#endif

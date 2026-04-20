@@ -1,19 +1,43 @@
 #include <iostream>
-#include "dbms/all.h"
+#include <string>
+
+#include "dbms/core/dbms.h"
+#include "dbms/sql/sql_api.h"
 
 int main(int argc, char** argv)
 {
     (void)argc;
     (void)argv;
-    dbms::TableStorage storage("/home/study/coursework/dbms/data/sample.tbl");
-    dbms::Page page;
-    int slot = page.append_record(reinterpret_cast<const unsigned char*>("test"), 4);
-    storage.write_page(0, page);
+    dbms::Dbms dbms_engine;
+    dbms::SqlApi api(dbms_engine);
 
-    dbms::Page read_back;
-    storage.read_page(0, read_back);
-    auto bytes = read_back.read_record(slot);
-    std::string value(reinterpret_cast<const char*>(bytes.data()), bytes.size());
-    std::cout << "Read back: " << value << std::endl;
+    std::cout << "DBMS SQL REPL\n";
+    std::cout << "Type one SQL statement per line. Use 'exit' or 'quit' to stop.\n";
+
+    std::string line;
+    while (true) {
+        std::cout << "> ";
+        if (!std::getline(std::cin, line)) {
+            break;
+        }
+        if (line == "exit;" || line == "quit;") {
+            break;
+        }
+        if (line.empty()) {
+            continue;
+        }
+
+        const dbms::SqlResponse response = api.execute_sql(line);
+        if (!response.ok) {
+            std::cout << "ERROR: " << response.error << '\n';
+            continue;
+        }
+        if (response.is_select) {
+            std::cout << response.json << '\n';
+            continue;
+        }
+        std::cout << "OK\n";
+    }
+
     return 0;
 }

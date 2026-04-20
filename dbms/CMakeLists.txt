@@ -34,6 +34,10 @@ target_link_libraries(dbms_core INTERFACE
 
 add_executable(dbms
     src/main.cpp
+    src/sql/lexer.cpp
+    src/sql/parser.cpp
+    src/sql/executor.cpp
+    src/sql/sql_api.cpp
 )
 
 target_link_libraries(dbms PRIVATE dbms_core)

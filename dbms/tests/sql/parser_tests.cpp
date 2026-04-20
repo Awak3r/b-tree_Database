@@ -13,6 +13,7 @@ using dbms::Literal;
 using dbms::Parser;
 using dbms::SelectStmt;
 using dbms::Statement;
+using dbms::UpdateStmt;
 using dbms::WhereComparison;
 
 TEST(parserTests, createTable)
@@ -111,4 +112,36 @@ TEST(parserTests, selectWithAliasAndWhereComparison)
     ASSERT_NE(rhs, nullptr);
     EXPECT_FALSE(rhs->is_null);
     EXPECT_EQ(rhs->text, "18");
+}
+
+TEST(parserTests, updateWithSetAndWhereComparison)
+{
+    Lexer lexer("UPDATE users SET age = 21, name = \"bob\" WHERE id == 1;");
+    Parser parser(lexer.tokenize());
+    Statement stmt = parser.parse_statement();
+    auto* update = std::get_if<UpdateStmt>(&stmt);
+    ASSERT_NE(update, nullptr);
+
+    EXPECT_EQ(update->table_name, "users");
+    ASSERT_EQ(update->assignments.size(), 2u);
+    EXPECT_EQ(update->assignments[0].column_name, "age");
+    EXPECT_FALSE(update->assignments[0].value.is_null);
+    EXPECT_EQ(update->assignments[0].value.text, "21");
+    EXPECT_EQ(update->assignments[1].column_name, "name");
+    EXPECT_FALSE(update->assignments[1].value.is_null);
+    EXPECT_EQ(update->assignments[1].value.text, "bob");
+
+    ASSERT_TRUE(update->where.has_value());
+    const auto* where = std::get_if<WhereComparison>(&update->where.value());
+    ASSERT_NE(where, nullptr);
+    EXPECT_EQ(where->op, ComparisonOp::eq);
+
+    const auto* lhs = std::get_if<ColumnRef>(&where->lhs);
+    ASSERT_NE(lhs, nullptr);
+    EXPECT_EQ(lhs->name, "id");
+
+    const auto* rhs = std::get_if<Literal>(&where->rhs);
+    ASSERT_NE(rhs, nullptr);
+    EXPECT_FALSE(rhs->is_null);
+    EXPECT_EQ(rhs->text, "1");
 }
