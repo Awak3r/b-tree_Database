@@ -1,0 +1,45 @@
+# OS and editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDEs
+.vscode/
+.idea/
+
+# Build directories (root and dbms)
+/dbms/build/
+/dbms/cmake-build-*/
+
+# CMake and CTest leftovers (if generated outside ignored build dirs)
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+Testing/
+CPackConfig.cmake
+CPackSourceConfig.cmake
+compile_commands.json
+
+# Compiled binaries and objects
+*.o
+*.obj
+*.a
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.out
+*.pdb
+
+# Logs and temp
+*.log
+*.tmp
+*.cache
+
+# DB runtime artifacts
+*.tbl
+*.idx

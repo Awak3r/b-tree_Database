@@ -69,6 +69,7 @@ include CMakeFiles/run_all_tests.dir/progress.make
 CMakeFiles/run_all_tests: tests/bin/dbms_tests
 CMakeFiles/run_all_tests: tests/bin/dbms_sql_tests
 CMakeFiles/run_all_tests: tests/bin/dbms_cli_tests
+CMakeFiles/run_all_tests: tests/bin/dbms_all_tests
 	/usr/local/lib/python3.10/dist-packages/cmake/data/bin/ctest --test-dir /home/study/coursework/dbms/build --output-on-failure
 
 CMakeFiles/run_all_tests.dir/codegen:

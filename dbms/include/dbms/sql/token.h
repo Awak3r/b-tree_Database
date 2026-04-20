@@ -28,7 +28,7 @@ enum class Keyword
     where_kw,
     update_kw,
     set_kw,
-    delete_kw,
+    delete_kw,                                                  
     as_kw,
     between_kw,
     and_kw,

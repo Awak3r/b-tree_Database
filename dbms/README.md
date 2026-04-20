@@ -30,3 +30,16 @@ Test binaries are placed in:
 ```text
 build/tests/bin
 ```
+
+## gRPC
+
+```bash
+# start gRPC server
+./build/dbms_grpc_server 0.0.0.0:50051
+
+# run gRPC client (interactive)
+./build/dbms_grpc_client 127.0.0.1:50051
+
+# run gRPC client with script
+./build/dbms_grpc_client 127.0.0.1:50051 /path/to/script.sql
+```
