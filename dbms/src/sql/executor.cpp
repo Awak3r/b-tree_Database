@@ -372,6 +372,9 @@ bool Executor::execute(const Statement& stmt)
     if (const auto* s = std::get_if<UpdateStmt>(&stmt)) {
         return execute_update(*s);
     }
+    if (const auto* s = std::get_if<DeleteStmt>(&stmt)) {
+        return execute_delete(*s);
+    }
     return false;
 }
 
@@ -661,6 +664,89 @@ bool Executor::normalize_insert_row(const Table& table,
     return true;
 }
 
+bool Executor::collect_matching_rows(const Table& table,
+                                     const std::optional<WhereCondition>& where,
+                                     std::vector<std::pair<Rid, row_values_type>>& out_rows) const
+{
+    out_rows.clear();
+    const auto& columns = table.columns();
+
+    std::unordered_map<std::string, std::size_t> col_pos;
+    col_pos.reserve(columns.size());
+    for (std::size_t i = 0; i < columns.size(); ++i) {
+        col_pos[columns[i].name] = i;
+    }
+
+    const WhereComparison* where_cmp = nullptr;
+    if (where.has_value()) {
+        where_cmp = std::get_if<WhereComparison>(&where.value());
+        if (where_cmp == nullptr) {
+            return false;
+        }
+    }
+
+    TablePageManager manager(table_path(_current_db, table.name()).string());
+
+    bool used_index_candidates = false;
+    if (where_cmp != nullptr) {
+        IndexWherePlan index_plan{};
+        if (try_build_index_where_plan(*where_cmp, columns, col_pos, index_plan)) {
+            const Column& idx_col = columns[index_plan.column_idx];
+            const std::filesystem::path idx_path = index_path(_current_db, table.name(), idx_col.name);
+            bool used_index = false;
+            std::vector<Rid> rid_candidates;
+            if (!collect_rids_from_index(idx_path, idx_col, index_plan.op, index_plan.literal, used_index, rid_candidates)) {
+                return false;
+            }
+            if (used_index) {
+                used_index_candidates = true;
+                out_rows.reserve(rid_candidates.size());
+                for (const Rid& rid : rid_candidates) {
+                    row_values_type row;
+                    if (!read_row_by_rid(manager, rid, columns.size(), row)) {
+                        continue;
+                    }
+                    if (!evaluate_where_comparison(*where_cmp, row, columns, col_pos)) {
+                        continue;
+                    }
+                    out_rows.push_back({rid, std::move(row)});
+                }
+            }
+        }
+    }
+
+    if (!used_index_candidates) {
+        Page meta;
+        if (!manager.read_page(0, meta)) {
+            return false;
+        }
+        TableHeader th{};
+        std::memcpy(&th, meta.data().data(), sizeof(TableHeader));
+
+        for (int page_id = 1; page_id < th.next_page_id; ++page_id) {
+            Page page;
+            if (!manager.read_page(page_id, page)) {
+                continue;
+            }
+            const PageHeader ph = page.read_header();
+            for (int slot = 0; slot < ph.slots_count; ++slot) {
+                const auto raw = page.read_record(slot);
+                if (raw.empty()) {
+                    continue;
+                }
+                Record rec = deserialize_record(raw.data(), columns.size());
+                row_values_type row = rec.values();
+                if (where_cmp != nullptr && !evaluate_where_comparison(*where_cmp, row, columns, col_pos)) {
+                    continue;
+                }
+                out_rows.push_back({Rid{page_id, slot}, std::move(row)});
+            }
+        }
+    }
+
+    return true;
+}
+
 bool Executor::execute_insert(const InsertStmt& stmt)
 {
     Database* db = find_current_database();
@@ -893,12 +979,6 @@ bool Executor::execute_update(const UpdateStmt& stmt)
         }
     }
 
-    const WhereComparison* where_cmp = nullptr;
-    if (stmt.where.has_value()) {
-        where_cmp = std::get_if<WhereComparison>(&stmt.where.value());
-        if (where_cmp == nullptr) return false;
-    }
-
     struct PendingUpdate
     {
         Rid rid;
@@ -914,75 +994,32 @@ bool Executor::execute_update(const UpdateStmt& stmt)
         std::optional<std::string> new_value;
     };
 
-    TablePageManager manager(table_path(_current_db, table->name()).string());
+    std::vector<std::pair<Rid, row_values_type>> matched_rows;
+    if (!collect_matching_rows(*table, stmt.where, matched_rows)) {
+        return false;
+    }
+
     std::vector<PendingUpdate> pending;
-
-    auto enqueue_row_if_matches = [&](const Rid& rid, row_values_type row) {
-        if (where_cmp != nullptr && !evaluate_where_comparison(*where_cmp, row, columns, col_pos)) {
-            return;
-        }
-
-        row_values_type updated = row;
+    pending.reserve(matched_rows.size());
+    for (auto& matched : matched_rows) {
+        row_values_type updated = matched.second;
         for (std::size_t i = 0; i < columns.size(); ++i) {
             if (has_assignment[i]) {
                 updated[i] = assignment_values[i];
             }
         }
-        if (updated == row) {
-            return;
+        if (updated == matched.second) {
+            continue;
         }
 
-        pending.push_back(PendingUpdate{rid, std::move(row), std::move(updated)});
-    };
-
-    bool used_index_candidates = false;
-    if (where_cmp != nullptr) {
-        IndexWherePlan index_plan{};
-        if (try_build_index_where_plan(*where_cmp, columns, col_pos, index_plan)) {
-            const Column& idx_col = columns[index_plan.column_idx];
-            const std::filesystem::path idx_path = index_path(_current_db, table->name(), idx_col.name);
-            bool used_index = false;
-            std::vector<Rid> rid_candidates;
-            if (!collect_rids_from_index(idx_path, idx_col, index_plan.op, index_plan.literal, used_index, rid_candidates)) {
-                return false;
-            }
-            if (used_index) {
-                used_index_candidates = true;
-                pending.reserve(rid_candidates.size());
-                for (const Rid& rid : rid_candidates) {
-                    row_values_type row;
-                    if (!read_row_by_rid(manager, rid, columns.size(), row)) {
-                        continue;
-                    }
-                    enqueue_row_if_matches(rid, std::move(row));
-                }
-            }
-        }
-    }
-
-    if (!used_index_candidates) {
-        Page meta;
-        if (!manager.read_page(0, meta)) return false;
-        TableHeader th{};
-        std::memcpy(&th, meta.data().data(), sizeof(TableHeader));
-
-        for (int page_id = 1; page_id < th.next_page_id; ++page_id) {
-            Page page;
-            if (!manager.read_page(page_id, page)) continue;
-            const PageHeader ph = page.read_header();
-            for (int slot = 0; slot < ph.slots_count; ++slot) {
-                auto raw = page.read_record(slot);
-                if (raw.empty()) continue;
-                Record rec = deserialize_record(raw.data(), columns.size());
-                row_values_type row = rec.values();
-                enqueue_row_if_matches(Rid{page_id, slot}, std::move(row));
-            }
-        }
+        pending.push_back(PendingUpdate{matched.first, std::move(matched.second), std::move(updated)});
     }
 
     if (pending.empty()) {
         return true;
     }
+
+    TablePageManager manager(table_path(_current_db, table->name()).string());
 
     for (std::size_t column_idx : assigned_indexed_columns) {
         const Column& column = columns[column_idx];
@@ -1199,18 +1236,28 @@ bool Executor::execute_update(const UpdateStmt& stmt)
 }
 
 
-bool Executor::execute_select(const SelectStmt& stmt){
+bool Executor::execute_select(const SelectStmt& stmt)
+{
     _last_select_columns.clear();
     _last_select_rows.clear();
     _last_select_column_types.clear();
     _last_select_json.clear();
+
     Database* db = find_current_database();
-    if (db == nullptr) return false;
+    if (db == nullptr) {
+        return false;
+    }
     Table* table = find_table(*db, stmt.table_name);
-    if (table == nullptr) return false;
+    if (table == nullptr) {
+        return false;
+    }
+
     const auto& columns = table->columns();
     std::unordered_map<std::string, std::size_t> col_pos;
-    for (std::size_t i = 0; i < columns.size(); ++i) col_pos[columns[i].name] = i;
+    for (std::size_t i = 0; i < columns.size(); ++i) {
+        col_pos[columns[i].name] = i;
+    }
+
     std::vector<std::size_t> selected_idx;
     if (stmt.projection.is_star) {
         for (std::size_t i = 0; i < columns.size(); ++i) {
@@ -1228,78 +1275,202 @@ bool Executor::execute_select(const SelectStmt& stmt){
             _last_select_column_types.push_back(columns[column_idx].type);
         }
     }
-    const WhereComparison* where_cmp = nullptr;
-    if (stmt.where.has_value()) {
-        where_cmp = std::get_if<WhereComparison>(&stmt.where.value());
-        if (where_cmp == nullptr) return false; // BETWEEN/LIKE позже
+
+    std::vector<std::pair<Rid, row_values_type>> matched_rows;
+    if (!collect_matching_rows(*table, stmt.where, matched_rows)) {
+        return false;
     }
-    TablePageManager manager(table_path(_current_db, table->name()).string());
 
-    if (where_cmp != nullptr) {
-        IndexWherePlan index_plan{};
-        if (try_build_index_where_plan(*where_cmp, columns, col_pos, index_plan)) {
-            const Column& idx_col = columns[index_plan.column_idx];
-            const std::filesystem::path idx_path = index_path(_current_db, table->name(), idx_col.name);
-            bool used_index = false;
-            std::vector<Rid> rid_candidates;
-            if (!collect_rids_from_index(idx_path, idx_col, index_plan.op, index_plan.literal, used_index, rid_candidates)) {
-                return false;
-            }
-            if (used_index) {
-                for (const Rid& rid : rid_candidates) {
-                    row_values_type row;
-                    if (!read_row_by_rid(manager, rid, columns.size(), row)) {
-                        continue;
-                    }
-
-                    bool pass = true;
-                    if (where_cmp != nullptr) {
-                        pass = evaluate_where_comparison(*where_cmp, row, columns, col_pos);
-                    }
-                    if (!pass) continue;
-
-                    row_values_type out;
-                    out.reserve(selected_idx.size());
-                    for (std::size_t idx : selected_idx) out.push_back(row[idx]);
-                    _last_select_rows.push_back(std::move(out));
-                }
-
-                build_last_select_json();
-                return true;
-            }
+    _last_select_rows.reserve(matched_rows.size());
+    for (const auto& matched : matched_rows) {
+        const row_values_type& row = matched.second;
+        row_values_type projected;
+        projected.reserve(selected_idx.size());
+        for (std::size_t idx : selected_idx) {
+            projected.push_back(row[idx]);
         }
+        _last_select_rows.push_back(std::move(projected));
     }
 
-    Page meta;
-    if (!manager.read_page(0, meta)) return false;
-    TableHeader th{};
-    std::memcpy(&th, meta.data().data(), sizeof(TableHeader));
-
-    for (int page_id = 1; page_id < th.next_page_id; ++page_id) {
-        Page page;
-        if (!manager.read_page(page_id, page)) continue;
-        PageHeader ph = page.read_header();
-        for (int slot = 0; slot < ph.slots_count; ++slot) {
-            auto raw = page.read_record(slot);
-            if (raw.empty()) continue;
-
-            Record rec = deserialize_record(raw.data(), columns.size());
-            row_values_type row = rec.values();
-
-            // TODO: apply where_cmp (comparison only)
-            bool pass = true;
-            if (where_cmp != nullptr) {
-                pass = evaluate_where_comparison(*where_cmp, row, columns, col_pos); 
-            }
-            if (!pass) continue;
-
-            row_values_type out;
-            out.reserve(selected_idx.size());
-            for (std::size_t idx : selected_idx) out.push_back(row[idx]);
-            _last_select_rows.push_back(std::move(out));
-        }
-    }
     build_last_select_json();
     return true;
+}
+
+bool Executor::execute_delete(const DeleteStmt& stmt)
+{
+    Database* db = find_current_database();
+    if (db == nullptr) {
+        return false;
     }
+    Table* table = find_table(*db, stmt.table_name);
+    if (table == nullptr) {
+        return false;
+    }
+    const auto& columns = table->columns();
+
+    std::vector<std::pair<Rid, row_values_type>> matched_rows;
+    if (!collect_matching_rows(*table, stmt.where, matched_rows)) {
+        return false;
+    }
+    if (matched_rows.empty()) {
+        return true;
+    }
+
+    struct IndexDeleteChange
+    {
+        std::size_t column_idx;
+        Rid rid;
+        std::optional<std::string> value;
+    };
+
+    std::vector<IndexDeleteChange> index_changes;
+    index_changes.reserve(matched_rows.size() * columns.size());
+    for (const auto& matched : matched_rows) {
+        for (std::size_t i = 0; i < columns.size(); ++i) {
+            if (!columns[i].indexed) {
+                continue;
+            }
+            const auto& value = matched.second[i];
+            if (!value.has_value()) {
+                return false;
+            }
+            index_changes.push_back(IndexDeleteChange{i, matched.first, value});
+        }
+    }
+
+    auto apply_index_delete = [&](const IndexDeleteChange& change) -> bool {
+        const Column& column = columns[change.column_idx];
+        const std::filesystem::path idx_path = index_path(_current_db, table->name(), column.name);
+        if (!change.value.has_value()) {
+            return false;
+        }
+
+        if (column.type == "INT") {
+            int key = 0;
+            if (!parse_int_strict(*change.value, key)) {
+                return false;
+            }
+            IndexManager<int> index(idx_path.string());
+            return index.erase(key);
+        }
+
+        if (column.type == "BOOL") {
+            bool key = false;
+            if (!parse_bool_strict(*change.value, key)) {
+                return false;
+            }
+            IndexManager<int> index(idx_path.string());
+            return index.erase(key ? 1 : 0);
+        }
+
+        if (column.type == "STRING") {
+            StringIndexKey key{};
+            if (!StringIndexKey::from_string(*change.value, key)) {
+                return false;
+            }
+            IndexManager<StringIndexKey> index(idx_path.string());
+            return index.erase(key);
+        }
+
+        return false;
+    };
+
+    auto rollback_index_delete = [&](const IndexDeleteChange& change) -> bool {
+        const Column& column = columns[change.column_idx];
+        const std::filesystem::path idx_path = index_path(_current_db, table->name(), column.name);
+        if (!change.value.has_value()) {
+            return false;
+        }
+
+        if (column.type == "INT") {
+            int key = 0;
+            if (!parse_int_strict(*change.value, key)) {
+                return false;
+            }
+            IndexManager<int> index(idx_path.string());
+            return index.insert(key, change.rid);
+        }
+
+        if (column.type == "BOOL") {
+            bool key = false;
+            if (!parse_bool_strict(*change.value, key)) {
+                return false;
+            }
+            IndexManager<int> index(idx_path.string());
+            return index.insert(key ? 1 : 0, change.rid);
+        }
+
+        if (column.type == "STRING") {
+            StringIndexKey key{};
+            if (!StringIndexKey::from_string(*change.value, key)) {
+                return false;
+            }
+            IndexManager<StringIndexKey> index(idx_path.string());
+            return index.insert(key, change.rid);
+        }
+
+        return false;
+    };
+
+    std::size_t applied_changes = 0;
+    for (const auto& change : index_changes) {
+        if (!apply_index_delete(change)) {
+            while (applied_changes > 0) {
+                --applied_changes;
+                rollback_index_delete(index_changes[applied_changes]);
+            }
+            return false;
+        }
+        ++applied_changes;
+    }
+
+    TablePageManager manager(table_path(_current_db, table->name()).string());
+    std::unordered_map<int, Page> original_pages;
+    std::unordered_map<int, Page> modified_pages;
+    for (const auto& matched : matched_rows) {
+        const Rid& rid = matched.first;
+        auto it_modified = modified_pages.find(rid.page_id);
+        if (it_modified == modified_pages.end()) {
+            Page page;
+            if (!manager.read_page(rid.page_id, page)) {
+                while (applied_changes > 0) {
+                    --applied_changes;
+                    rollback_index_delete(index_changes[applied_changes]);
+                }
+                return false;
+            }
+            original_pages.emplace(rid.page_id, page);
+            it_modified = modified_pages.emplace(rid.page_id, page).first;
+        }
+
+        if (!it_modified->second.remove_record(rid.slot_id)) {
+            while (applied_changes > 0) {
+                --applied_changes;
+                rollback_index_delete(index_changes[applied_changes]);
+            }
+            return false;
+        }
+    }
+
+    std::vector<int> written_pages;
+    written_pages.reserve(modified_pages.size());
+    for (const auto& [page_id, page] : modified_pages) {
+        if (!manager.write_page(page_id, page)) {
+            for (int written_page_id : written_pages) {
+                const auto it_original = original_pages.find(written_page_id);
+                if (it_original != original_pages.end()) {
+                    manager.write_page(written_page_id, it_original->second);
+                }
+            }
+            while (applied_changes > 0) {
+                --applied_changes;
+                rollback_index_delete(index_changes[applied_changes]);
+            }
+            return false;
+        }
+        written_pages.push_back(page_id);
+    }
+
+    return true;
+}
 }

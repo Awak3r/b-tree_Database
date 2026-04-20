@@ -23,6 +23,9 @@ Statement Parser::parse_statement()
     if (match_keyword(Keyword::update_kw)) {
         return parse_update();
     }
+    if (match_keyword(Keyword::delete_kw)) {
+        return parse_delete();
+    }
     throw std::runtime_error("Unexpected token");
 }
 
@@ -387,6 +390,21 @@ Statement Parser::parse_update()
         stmt.where = std::nullopt;
     }
 
+    match_symbol(';');
+    return stmt;
+}
+
+Statement Parser::parse_delete()
+{
+    DeleteStmt stmt{};
+    expect_keyword(Keyword::from_kw);
+    stmt.table_name = parse_name();
+    if (match_keyword(Keyword::where_kw)) {
+        stmt.where = parse_select_where();
+    } else {
+        stmt.where = std::nullopt;
+    }
+    
     match_symbol(';');
     return stmt;
 }

@@ -6,6 +6,7 @@ using dbms::ColumnDef;
 using dbms::ColumnRef;
 using dbms::ComparisonOp;
 using dbms::CreateTableStmt;
+using dbms::DeleteStmt;
 using dbms::DropTableStmt;
 using dbms::InsertStmt;
 using dbms::Lexer;
@@ -144,4 +145,40 @@ TEST(parserTests, updateWithSetAndWhereComparison)
     ASSERT_NE(rhs, nullptr);
     EXPECT_FALSE(rhs->is_null);
     EXPECT_EQ(rhs->text, "1");
+}
+
+TEST(parserTests, deleteWithWhereComparison)
+{
+    Lexer lexer("DELETE FROM users WHERE id == 10;");
+    Parser parser(lexer.tokenize());
+    Statement stmt = parser.parse_statement();
+    auto* del = std::get_if<DeleteStmt>(&stmt);
+    ASSERT_NE(del, nullptr);
+
+    EXPECT_EQ(del->table_name, "users");
+    ASSERT_TRUE(del->where.has_value());
+    const auto* where = std::get_if<WhereComparison>(&del->where.value());
+    ASSERT_NE(where, nullptr);
+    EXPECT_EQ(where->op, ComparisonOp::eq);
+
+    const auto* lhs = std::get_if<ColumnRef>(&where->lhs);
+    ASSERT_NE(lhs, nullptr);
+    EXPECT_EQ(lhs->name, "id");
+
+    const auto* rhs = std::get_if<Literal>(&where->rhs);
+    ASSERT_NE(rhs, nullptr);
+    EXPECT_FALSE(rhs->is_null);
+    EXPECT_EQ(rhs->text, "10");
+}
+
+TEST(parserTests, deleteWithoutWhere)
+{
+    Lexer lexer("DELETE FROM users;");
+    Parser parser(lexer.tokenize());
+    Statement stmt = parser.parse_statement();
+    auto* del = std::get_if<DeleteStmt>(&stmt);
+    ASSERT_NE(del, nullptr);
+
+    EXPECT_EQ(del->table_name, "users");
+    EXPECT_FALSE(del->where.has_value());
 }

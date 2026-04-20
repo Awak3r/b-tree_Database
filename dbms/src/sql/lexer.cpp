@@ -195,6 +195,10 @@ bool Lexer::match_keyword(const std::string& text, Keyword& out_kw)
         out_kw = Keyword::set_kw;
         return true;
     }
+    if (text == "delete") {
+        out_kw = Keyword::delete_kw;
+        return true;
+    }
     if (text == "from") {
         out_kw = Keyword::from_kw;
         return true;

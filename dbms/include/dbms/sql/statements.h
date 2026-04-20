@@ -136,6 +136,12 @@ struct UpdateStmt
     std::optional<WhereCondition> where;
 };
 
+struct DeleteStmt
+{
+    std::string table_name;
+    std::optional<WhereCondition> where;
+};
+
 using Statement = std::variant<
     CreateDatabaseStmt,
     DropDatabaseStmt,
@@ -144,7 +150,8 @@ using Statement = std::variant<
     DropTableStmt,
     InsertStmt,
     SelectStmt,
-    UpdateStmt>;
+    UpdateStmt,
+    DeleteStmt>;
 
 } // namespace dbms
 

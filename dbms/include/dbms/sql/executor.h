@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 #include "statements.h"
 #include "../core/dbms.h"
@@ -40,6 +41,7 @@ private:
     bool execute_insert(const InsertStmt& stmt);
     bool execute_select(const SelectStmt& stmt);
     bool execute_update(const UpdateStmt& stmt);
+    bool execute_delete(const DeleteStmt& stmt);
 
     Database* find_current_database();
     static Table* find_table(Database& db, const std::string& table_name);
@@ -56,6 +58,9 @@ private:
                               std::vector<int>& bool_index_keys,
                               std::vector<std::string>& string_index_keys,
                               row_values_type& out_row) const;
+    bool collect_matching_rows(const Table& table,
+                               const std::optional<WhereCondition>& where,
+                               std::vector<std::pair<Rid, row_values_type>>& out_rows) const;
     static bool is_type_valid(const std::string& type);
 };
 

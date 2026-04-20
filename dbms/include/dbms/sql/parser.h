@@ -35,6 +35,9 @@ private:
     Statement parse_use();
     Statement parse_insert();
     Statement parse_update();
+    Statement parse_delete();
+    SelectStmt parse_select();
+
     CreateTableStmt parse_create_table();
     DropTableStmt parse_drop_table();
     CreateDatabaseStmt parse_create_database();
@@ -43,7 +46,6 @@ private:
     std::vector<InsertValue> parse_insert_row();
     InsertValue parse_insert_value();
     std::string parse_type_name();
-    SelectStmt parse_select();
     SelectProjection parse_select_projection();
     SelectItem parse_select_item();
     Operand parse_operand();

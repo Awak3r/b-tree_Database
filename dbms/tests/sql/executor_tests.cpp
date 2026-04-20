@@ -503,6 +503,143 @@ TEST(executorTests, updateIndexedKeyStressSequenceKeepsIndexConsistent)
     }
 }
 
+TEST(executorTests, deleteWithWhereRemovesRow)
+{
+    const std::filesystem::path root = prepare_data_root("delete_with_where_removes_row");
+    Dbms dbms(root);
+    Executor exec(dbms);
+
+    ASSERT_TRUE(run_sql(exec, "CREATE DATABASE test;\n"));
+    ASSERT_TRUE(run_sql(exec, "USE test;\n"));
+    ASSERT_TRUE(run_sql(exec, "CREATE TABLE users (id INT INDEXED, name STRING);\n"));
+    ASSERT_TRUE(run_sql(exec, "INSERT INTO users (id, name) VALUE (1, \"alice\"), (2, \"bob\"), (3, \"carol\");\n"));
+
+    ASSERT_TRUE(run_sql(exec, "DELETE FROM users WHERE id == 2;\n"));
+
+    ASSERT_TRUE(run_sql(exec, "SELECT id, name FROM users WHERE id >= 1;\n"));
+    {
+        const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+        ASSERT_TRUE(result.is_array());
+        ASSERT_EQ(result.size(), 2u);
+        std::vector<int> ids;
+        ids.reserve(result.size());
+        for (const auto& row : result) {
+            ids.push_back(row["id"].get<int>());
+        }
+        std::sort(ids.begin(), ids.end());
+        EXPECT_EQ(ids[0], 1);
+        EXPECT_EQ(ids[1], 3);
+    }
+
+    ASSERT_TRUE(run_sql(exec, "SELECT id FROM users WHERE id == 2;\n"));
+    {
+        const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+        ASSERT_TRUE(result.is_array());
+        ASSERT_EQ(result.size(), 0u);
+    }
+}
+
+TEST(executorTests, deleteIndexedKeyRemovesFromIndex)
+{
+    const std::filesystem::path root = prepare_data_root("delete_indexed_key_removes_from_index");
+    Dbms dbms(root);
+    Executor exec(dbms);
+
+    ASSERT_TRUE(run_sql(exec, "CREATE DATABASE test;\n"));
+    ASSERT_TRUE(run_sql(exec, "USE test;\n"));
+    ASSERT_TRUE(run_sql(exec, "CREATE TABLE users (id INT INDEXED, name STRING);\n"));
+    ASSERT_TRUE(run_sql(exec, "INSERT INTO users (id, name) VALUE (1, \"alice\");\n"));
+
+    ASSERT_TRUE(run_sql(exec, "DELETE FROM users WHERE id == 1;\n"));
+    ASSERT_TRUE(run_sql(exec, "INSERT INTO users (id, name) VALUE (1, \"again\");\n"));
+
+    ASSERT_TRUE(run_sql(exec, "SELECT name FROM users WHERE id == 1;\n"));
+    const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+    ASSERT_TRUE(result.is_array());
+    ASSERT_EQ(result.size(), 1u);
+    EXPECT_EQ(result[0]["name"], "again");
+}
+
+TEST(executorTests, deleteUnknownTableFails)
+{
+    const std::filesystem::path root = prepare_data_root("delete_unknown_table_fails");
+    Dbms dbms(root);
+    Executor exec(dbms);
+
+    ASSERT_TRUE(run_sql(exec, "CREATE DATABASE test;\n"));
+    ASSERT_TRUE(run_sql(exec, "USE test;\n"));
+
+    EXPECT_FALSE(run_sql(exec, "DELETE FROM missing WHERE id == 1;\n"));
+}
+
+TEST(executorTests, deleteWithoutWhereRemovesAllRows)
+{
+    const std::filesystem::path root = prepare_data_root("delete_without_where_removes_all_rows");
+    Dbms dbms(root);
+    Executor exec(dbms);
+
+    ASSERT_TRUE(run_sql(exec, "CREATE DATABASE test;\n"));
+    ASSERT_TRUE(run_sql(exec, "USE test;\n"));
+    ASSERT_TRUE(run_sql(exec, "CREATE TABLE users (id INT INDEXED, name STRING);\n"));
+    ASSERT_TRUE(run_sql(exec, "INSERT INTO users (id, name) VALUE (1, \"alice\"), (2, \"bob\");\n"));
+
+    ASSERT_TRUE(run_sql(exec, "DELETE FROM users;\n"));
+    ASSERT_TRUE(run_sql(exec, "SELECT id, name FROM users WHERE id >= 1;\n"));
+
+    const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+    ASSERT_TRUE(result.is_array());
+    ASSERT_EQ(result.size(), 0u);
+}
+
+TEST(executorTests, deleteWhereNoMatchesDoesNothing)
+{
+    const std::filesystem::path root = prepare_data_root("delete_where_no_matches_does_nothing");
+    Dbms dbms(root);
+    Executor exec(dbms);
+
+    ASSERT_TRUE(run_sql(exec, "CREATE DATABASE test;\n"));
+    ASSERT_TRUE(run_sql(exec, "USE test;\n"));
+    ASSERT_TRUE(run_sql(exec, "CREATE TABLE users (id INT INDEXED, name STRING);\n"));
+    ASSERT_TRUE(run_sql(exec, "INSERT INTO users (id, name) VALUE (1, \"alice\"), (2, \"bob\");\n"));
+
+    ASSERT_TRUE(run_sql(exec, "DELETE FROM users WHERE id == 999;\n"));
+
+    ASSERT_TRUE(run_sql(exec, "SELECT id, name FROM users WHERE id >= 1;\n"));
+    const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+    ASSERT_TRUE(result.is_array());
+    ASSERT_EQ(result.size(), 2u);
+    std::vector<int> ids;
+    ids.reserve(result.size());
+    for (const auto& row : result) {
+        ids.push_back(row["id"].get<int>());
+    }
+    std::sort(ids.begin(), ids.end());
+    EXPECT_EQ(ids[0], 1);
+    EXPECT_EQ(ids[1], 2);
+}
+
+TEST(executorTests, deleteWithoutWhereClearsAllIndexedKeys)
+{
+    const std::filesystem::path root = prepare_data_root("delete_without_where_clears_all_indexed_keys");
+    Dbms dbms(root);
+    Executor exec(dbms);
+
+    ASSERT_TRUE(run_sql(exec, "CREATE DATABASE test;\n"));
+    ASSERT_TRUE(run_sql(exec, "USE test;\n"));
+    ASSERT_TRUE(run_sql(exec, "CREATE TABLE users (id INT INDEXED, name STRING);\n"));
+    ASSERT_TRUE(run_sql(exec, "INSERT INTO users (id, name) VALUE (1, \"alice\"), (2, \"bob\");\n"));
+
+    ASSERT_TRUE(run_sql(exec, "DELETE FROM users;\n"));
+
+    ASSERT_TRUE(run_sql(exec, "INSERT INTO users (id, name) VALUE (1, \"alice2\");\n"));
+    ASSERT_TRUE(run_sql(exec, "INSERT INTO users (id, name) VALUE (2, \"bob2\");\n"));
+    ASSERT_TRUE(run_sql(exec, "SELECT id, name FROM users WHERE id >= 1;\n"));
+
+    const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+    ASSERT_TRUE(result.is_array());
+    ASSERT_EQ(result.size(), 2u);
+}
+
 int main(int argc, char** argv)
 {
     ::testing::InitGoogleTest(&argc, argv);

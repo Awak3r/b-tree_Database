@@ -77,6 +77,26 @@ TEST(lexerTests, selectKeywords)
     EXPECT_EQ(tokens[16].symbol, ';');
 }
 
+TEST(lexerTests, deleteKeywords)
+{
+    Lexer lexer("DELETE FROM users WHERE id == 1;");
+    auto tokens = lexer.tokenize();
+    ASSERT_GE(tokens.size(), 9u);
+    EXPECT_EQ(tokens[0].type, TokenType::keyword);
+    EXPECT_EQ(tokens[0].keyword, Keyword::delete_kw);
+    EXPECT_EQ(tokens[1].keyword, Keyword::from_kw);
+    EXPECT_EQ(tokens[2].type, TokenType::identifier);
+    EXPECT_EQ(tokens[2].text, "users");
+    EXPECT_EQ(tokens[3].keyword, Keyword::where_kw);
+    EXPECT_EQ(tokens[4].type, TokenType::identifier);
+    EXPECT_EQ(tokens[4].text, "id");
+    EXPECT_EQ(tokens[5].type, TokenType::symbol);
+    EXPECT_EQ(tokens[5].text, "==");
+    EXPECT_EQ(tokens[6].type, TokenType::number);
+    EXPECT_EQ(tokens[6].text, "1");
+    EXPECT_EQ(tokens[7].symbol, ';');
+}
+
 TEST(lexerTests, comparisonOperators)
 {
     Lexer lexer("SELECT * FROM users WHERE a == 1 AND b != 2 AND c <= 3 AND d >= 4 AND e < 5 AND f > 6;");
