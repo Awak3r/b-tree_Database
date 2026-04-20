@@ -1,6 +1,8 @@
 /home/study/coursework/dbms/build/CMakeFiles/dbms.dir
 /home/study/coursework/dbms/build/CMakeFiles/dbms_tests.dir
 /home/study/coursework/dbms/build/CMakeFiles/dbms_sql_tests.dir
+/home/study/coursework/dbms/build/CMakeFiles/dbms_cli_tests.dir
+/home/study/coursework/dbms/build/CMakeFiles/run_all_tests.dir
 /home/study/coursework/dbms/build/CMakeFiles/test.dir
 /home/study/coursework/dbms/build/CMakeFiles/edit_cache.dir
 /home/study/coursework/dbms/build/CMakeFiles/rebuild_cache.dir

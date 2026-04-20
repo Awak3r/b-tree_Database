@@ -103,6 +103,8 @@ set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/dbms.dir/DependInfo.cmake"
   "CMakeFiles/dbms_tests.dir/DependInfo.cmake"
   "CMakeFiles/dbms_sql_tests.dir/DependInfo.cmake"
+  "CMakeFiles/dbms_cli_tests.dir/DependInfo.cmake"
+  "CMakeFiles/run_all_tests.dir/DependInfo.cmake"
   "_deps/googletest-build/googlemock/CMakeFiles/gmock.dir/DependInfo.cmake"
   "_deps/googletest-build/googlemock/CMakeFiles/gmock_main.dir/DependInfo.cmake"
   "_deps/googletest-build/googletest/CMakeFiles/gtest.dir/DependInfo.cmake"

@@ -11,8 +11,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/dbms_sql_tests.dir/tests/sql/lexer_tests.cpp.o.d"
   "CMakeFiles/dbms_sql_tests.dir/tests/sql/parser_tests.cpp.o"
   "CMakeFiles/dbms_sql_tests.dir/tests/sql/parser_tests.cpp.o.d"
-  "dbms_sql_tests"
-  "dbms_sql_tests.pdb"
+  "tests/bin/dbms_sql_tests"
+  "tests/bin/dbms_sql_tests.pdb"
 )
 
 # Per-language clean rules from dependency scanning.

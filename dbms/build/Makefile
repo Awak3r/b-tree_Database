@@ -211,6 +211,32 @@ dbms_sql_tests/fast:
 .PHONY : dbms_sql_tests/fast
 
 #=============================================================================
+# Target rules for targets named dbms_cli_tests
+
+# Build rule for target.
+dbms_cli_tests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 dbms_cli_tests
+.PHONY : dbms_cli_tests
+
+# fast build rule for target.
+dbms_cli_tests/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_cli_tests.dir/build.make CMakeFiles/dbms_cli_tests.dir/build
+.PHONY : dbms_cli_tests/fast
+
+#=============================================================================
+# Target rules for targets named run_all_tests
+
+# Build rule for target.
+run_all_tests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 run_all_tests
+.PHONY : run_all_tests
+
+# fast build rule for target.
+run_all_tests/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/run_all_tests.dir/build.make CMakeFiles/run_all_tests.dir/build
+.PHONY : run_all_tests/fast
+
+#=============================================================================
 # Target rules for targets named gmock
 
 # Build rule for target.
@@ -286,6 +312,33 @@ src/main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms.dir/build.make CMakeFiles/dbms.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
+src/sql/cli.o: src/sql/cli.cpp.o
+.PHONY : src/sql/cli.o
+
+# target to build an object file
+src/sql/cli.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms.dir/build.make CMakeFiles/dbms.dir/src/sql/cli.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_cli_tests.dir/build.make CMakeFiles/dbms_cli_tests.dir/src/sql/cli.cpp.o
+.PHONY : src/sql/cli.cpp.o
+
+src/sql/cli.i: src/sql/cli.cpp.i
+.PHONY : src/sql/cli.i
+
+# target to preprocess a source file
+src/sql/cli.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms.dir/build.make CMakeFiles/dbms.dir/src/sql/cli.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_cli_tests.dir/build.make CMakeFiles/dbms_cli_tests.dir/src/sql/cli.cpp.i
+.PHONY : src/sql/cli.cpp.i
+
+src/sql/cli.s: src/sql/cli.cpp.s
+.PHONY : src/sql/cli.s
+
+# target to generate assembly for a file
+src/sql/cli.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms.dir/build.make CMakeFiles/dbms.dir/src/sql/cli.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_cli_tests.dir/build.make CMakeFiles/dbms_cli_tests.dir/src/sql/cli.cpp.s
+.PHONY : src/sql/cli.cpp.s
+
 src/sql/executor.o: src/sql/executor.cpp.o
 .PHONY : src/sql/executor.o
 
@@ -293,6 +346,7 @@ src/sql/executor.o: src/sql/executor.cpp.o
 src/sql/executor.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms.dir/build.make CMakeFiles/dbms.dir/src/sql/executor.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_sql_tests.dir/build.make CMakeFiles/dbms_sql_tests.dir/src/sql/executor.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_cli_tests.dir/build.make CMakeFiles/dbms_cli_tests.dir/src/sql/executor.cpp.o
 .PHONY : src/sql/executor.cpp.o
 
 src/sql/executor.i: src/sql/executor.cpp.i
@@ -302,6 +356,7 @@ src/sql/executor.i: src/sql/executor.cpp.i
 src/sql/executor.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms.dir/build.make CMakeFiles/dbms.dir/src/sql/executor.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_sql_tests.dir/build.make CMakeFiles/dbms_sql_tests.dir/src/sql/executor.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_cli_tests.dir/build.make CMakeFiles/dbms_cli_tests.dir/src/sql/executor.cpp.i
 .PHONY : src/sql/executor.cpp.i
 
 src/sql/executor.s: src/sql/executor.cpp.s
@@ -311,6 +366,7 @@ src/sql/executor.s: src/sql/executor.cpp.s
 src/sql/executor.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms.dir/build.make CMakeFiles/dbms.dir/src/sql/executor.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_sql_tests.dir/build.make CMakeFiles/dbms_sql_tests.dir/src/sql/executor.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_cli_tests.dir/build.make CMakeFiles/dbms_cli_tests.dir/src/sql/executor.cpp.s
 .PHONY : src/sql/executor.cpp.s
 
 src/sql/lexer.o: src/sql/lexer.cpp.o
@@ -320,6 +376,7 @@ src/sql/lexer.o: src/sql/lexer.cpp.o
 src/sql/lexer.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms.dir/build.make CMakeFiles/dbms.dir/src/sql/lexer.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_sql_tests.dir/build.make CMakeFiles/dbms_sql_tests.dir/src/sql/lexer.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_cli_tests.dir/build.make CMakeFiles/dbms_cli_tests.dir/src/sql/lexer.cpp.o
 .PHONY : src/sql/lexer.cpp.o
 
 src/sql/lexer.i: src/sql/lexer.cpp.i
@@ -329,6 +386,7 @@ src/sql/lexer.i: src/sql/lexer.cpp.i
 src/sql/lexer.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms.dir/build.make CMakeFiles/dbms.dir/src/sql/lexer.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_sql_tests.dir/build.make CMakeFiles/dbms_sql_tests.dir/src/sql/lexer.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_cli_tests.dir/build.make CMakeFiles/dbms_cli_tests.dir/src/sql/lexer.cpp.i
 .PHONY : src/sql/lexer.cpp.i
 
 src/sql/lexer.s: src/sql/lexer.cpp.s
@@ -338,6 +396,7 @@ src/sql/lexer.s: src/sql/lexer.cpp.s
 src/sql/lexer.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms.dir/build.make CMakeFiles/dbms.dir/src/sql/lexer.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_sql_tests.dir/build.make CMakeFiles/dbms_sql_tests.dir/src/sql/lexer.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_cli_tests.dir/build.make CMakeFiles/dbms_cli_tests.dir/src/sql/lexer.cpp.s
 .PHONY : src/sql/lexer.cpp.s
 
 src/sql/parser.o: src/sql/parser.cpp.o
@@ -347,6 +406,7 @@ src/sql/parser.o: src/sql/parser.cpp.o
 src/sql/parser.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms.dir/build.make CMakeFiles/dbms.dir/src/sql/parser.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_sql_tests.dir/build.make CMakeFiles/dbms_sql_tests.dir/src/sql/parser.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_cli_tests.dir/build.make CMakeFiles/dbms_cli_tests.dir/src/sql/parser.cpp.o
 .PHONY : src/sql/parser.cpp.o
 
 src/sql/parser.i: src/sql/parser.cpp.i
@@ -356,6 +416,7 @@ src/sql/parser.i: src/sql/parser.cpp.i
 src/sql/parser.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms.dir/build.make CMakeFiles/dbms.dir/src/sql/parser.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_sql_tests.dir/build.make CMakeFiles/dbms_sql_tests.dir/src/sql/parser.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_cli_tests.dir/build.make CMakeFiles/dbms_cli_tests.dir/src/sql/parser.cpp.i
 .PHONY : src/sql/parser.cpp.i
 
 src/sql/parser.s: src/sql/parser.cpp.s
@@ -365,6 +426,7 @@ src/sql/parser.s: src/sql/parser.cpp.s
 src/sql/parser.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms.dir/build.make CMakeFiles/dbms.dir/src/sql/parser.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_sql_tests.dir/build.make CMakeFiles/dbms_sql_tests.dir/src/sql/parser.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_cli_tests.dir/build.make CMakeFiles/dbms_cli_tests.dir/src/sql/parser.cpp.s
 .PHONY : src/sql/parser.cpp.s
 
 src/sql/sql_api.o: src/sql/sql_api.cpp.o
@@ -373,6 +435,7 @@ src/sql/sql_api.o: src/sql/sql_api.cpp.o
 # target to build an object file
 src/sql/sql_api.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms.dir/build.make CMakeFiles/dbms.dir/src/sql/sql_api.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_cli_tests.dir/build.make CMakeFiles/dbms_cli_tests.dir/src/sql/sql_api.cpp.o
 .PHONY : src/sql/sql_api.cpp.o
 
 src/sql/sql_api.i: src/sql/sql_api.cpp.i
@@ -381,6 +444,7 @@ src/sql/sql_api.i: src/sql/sql_api.cpp.i
 # target to preprocess a source file
 src/sql/sql_api.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms.dir/build.make CMakeFiles/dbms.dir/src/sql/sql_api.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_cli_tests.dir/build.make CMakeFiles/dbms_cli_tests.dir/src/sql/sql_api.cpp.i
 .PHONY : src/sql/sql_api.cpp.i
 
 src/sql/sql_api.s: src/sql/sql_api.cpp.s
@@ -389,6 +453,7 @@ src/sql/sql_api.s: src/sql/sql_api.cpp.s
 # target to generate assembly for a file
 src/sql/sql_api.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms.dir/build.make CMakeFiles/dbms.dir/src/sql/sql_api.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_cli_tests.dir/build.make CMakeFiles/dbms_cli_tests.dir/src/sql/sql_api.cpp.s
 .PHONY : src/sql/sql_api.cpp.s
 
 tests/b_tree_tests.o: tests/b_tree_tests.cpp.o
@@ -414,6 +479,30 @@ tests/b_tree_tests.s: tests/b_tree_tests.cpp.s
 tests/b_tree_tests.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_tests.dir/build.make CMakeFiles/dbms_tests.dir/tests/b_tree_tests.cpp.s
 .PHONY : tests/b_tree_tests.cpp.s
+
+tests/sql/cli_script_tests.o: tests/sql/cli_script_tests.cpp.o
+.PHONY : tests/sql/cli_script_tests.o
+
+# target to build an object file
+tests/sql/cli_script_tests.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_cli_tests.dir/build.make CMakeFiles/dbms_cli_tests.dir/tests/sql/cli_script_tests.cpp.o
+.PHONY : tests/sql/cli_script_tests.cpp.o
+
+tests/sql/cli_script_tests.i: tests/sql/cli_script_tests.cpp.i
+.PHONY : tests/sql/cli_script_tests.i
+
+# target to preprocess a source file
+tests/sql/cli_script_tests.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_cli_tests.dir/build.make CMakeFiles/dbms_cli_tests.dir/tests/sql/cli_script_tests.cpp.i
+.PHONY : tests/sql/cli_script_tests.cpp.i
+
+tests/sql/cli_script_tests.s: tests/sql/cli_script_tests.cpp.s
+.PHONY : tests/sql/cli_script_tests.s
+
+# target to generate assembly for a file
+tests/sql/cli_script_tests.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_cli_tests.dir/build.make CMakeFiles/dbms_cli_tests.dir/tests/sql/cli_script_tests.cpp.s
+.PHONY : tests/sql/cli_script_tests.cpp.s
 
 tests/sql/executor_tests.o: tests/sql/executor_tests.cpp.o
 .PHONY : tests/sql/executor_tests.o
@@ -500,7 +589,9 @@ help:
 	@echo "... list_install_components"
 	@echo "... rebuild_cache"
 	@echo "... test"
+	@echo "... run_all_tests"
 	@echo "... dbms"
+	@echo "... dbms_cli_tests"
 	@echo "... dbms_sql_tests"
 	@echo "... dbms_tests"
 	@echo "... gmock"
@@ -510,6 +601,9 @@ help:
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
+	@echo "... src/sql/cli.o"
+	@echo "... src/sql/cli.i"
+	@echo "... src/sql/cli.s"
 	@echo "... src/sql/executor.o"
 	@echo "... src/sql/executor.i"
 	@echo "... src/sql/executor.s"
@@ -525,6 +619,9 @@ help:
 	@echo "... tests/b_tree_tests.o"
 	@echo "... tests/b_tree_tests.i"
 	@echo "... tests/b_tree_tests.s"
+	@echo "... tests/sql/cli_script_tests.o"
+	@echo "... tests/sql/cli_script_tests.i"
+	@echo "... tests/sql/cli_script_tests.s"
 	@echo "... tests/sql/executor_tests.o"
 	@echo "... tests/sql/executor_tests.i"
 	@echo "... tests/sql/executor_tests.s"

@@ -1,6 +1,8 @@
 file(REMOVE_RECURSE
   "CMakeFiles/dbms.dir/src/main.cpp.o"
   "CMakeFiles/dbms.dir/src/main.cpp.o.d"
+  "CMakeFiles/dbms.dir/src/sql/cli.cpp.o"
+  "CMakeFiles/dbms.dir/src/sql/cli.cpp.o.d"
   "CMakeFiles/dbms.dir/src/sql/executor.cpp.o"
   "CMakeFiles/dbms.dir/src/sql/executor.cpp.o.d"
   "CMakeFiles/dbms.dir/src/sql/lexer.cpp.o"

@@ -9,6 +9,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/study/coursework/dbms/src/main.cpp" "CMakeFiles/dbms.dir/src/main.cpp.o" "gcc" "CMakeFiles/dbms.dir/src/main.cpp.o.d"
+  "/home/study/coursework/dbms/src/sql/cli.cpp" "CMakeFiles/dbms.dir/src/sql/cli.cpp.o" "gcc" "CMakeFiles/dbms.dir/src/sql/cli.cpp.o.d"
   "/home/study/coursework/dbms/src/sql/executor.cpp" "CMakeFiles/dbms.dir/src/sql/executor.cpp.o" "gcc" "CMakeFiles/dbms.dir/src/sql/executor.cpp.o.d"
   "/home/study/coursework/dbms/src/sql/lexer.cpp" "CMakeFiles/dbms.dir/src/sql/lexer.cpp.o" "gcc" "CMakeFiles/dbms.dir/src/sql/lexer.cpp.o.d"
   "/home/study/coursework/dbms/src/sql/parser.cpp" "CMakeFiles/dbms.dir/src/sql/parser.cpp.o" "gcc" "CMakeFiles/dbms.dir/src/sql/parser.cpp.o.d"

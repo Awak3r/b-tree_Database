@@ -1,1 +1,1 @@
-/usr/bin/c++ CMakeFiles/dbms.dir/src/main.cpp.o CMakeFiles/dbms.dir/src/sql/lexer.cpp.o CMakeFiles/dbms.dir/src/sql/parser.cpp.o CMakeFiles/dbms.dir/src/sql/executor.cpp.o CMakeFiles/dbms.dir/src/sql/sql_api.cpp.o -o prog
+/usr/bin/c++ CMakeFiles/dbms.dir/src/main.cpp.o CMakeFiles/dbms.dir/src/sql/cli.cpp.o CMakeFiles/dbms.dir/src/sql/lexer.cpp.o CMakeFiles/dbms.dir/src/sql/parser.cpp.o CMakeFiles/dbms.dir/src/sql/executor.cpp.o CMakeFiles/dbms.dir/src/sql/sql_api.cpp.o -o prog
