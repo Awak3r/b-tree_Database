@@ -74,14 +74,25 @@ void Parser::expect_keyword(Keyword kw)
 void Parser::expect_symbol(char c)
 {
     if (!match_symbol(c)) {
-        throw std::runtime_error("Expected symbol");
+        throw std::runtime_error(std::string("Expected '") + c + "'");
     }
 }
+
+std::string Parser::parse_table_name()
+{
+    std::string name = parse_name();
+    if (match_symbol('.')) {
+        name += ".";
+        name += parse_name();
+    }
+    return name;
+}
+
 
 std::string Parser::parse_name()
 {
     const Token& t = peek();
-    if (t.type == TokenType::identifier || t.type == TokenType::string_literal) {
+    if (t.type == TokenType::identifier) {
         consume();
         return t.text;
     }
@@ -114,7 +125,7 @@ Statement Parser::parse_use()
 {
     UseDatabaseStmt stmt{};
     stmt.name = parse_name();
-    match_symbol(';');
+    expect_symbol(';');
     return stmt;
 }
 
@@ -122,7 +133,7 @@ Statement Parser::parse_insert()
 {
     expect_keyword(Keyword::into_kw);
     InsertStmt stmt{};
-    stmt.table_name = parse_name();
+    stmt.table_name = parse_table_name();
     expect_symbol('(');
     stmt.columns.push_back(parse_name());
     while (match_symbol(',')) {
@@ -136,7 +147,7 @@ Statement Parser::parse_insert()
     while (match_symbol(',')) {
         stmt.rows.push_back(parse_insert_row());
     }
-    match_symbol(';');
+    expect_symbol(';');
     return stmt;
 }
 
@@ -144,7 +155,7 @@ CreateDatabaseStmt Parser::parse_create_database()
 {
     CreateDatabaseStmt stmt{};
     stmt.name = parse_name();
-    match_symbol(';');
+    expect_symbol(';');
     return stmt;
 }
 
@@ -152,7 +163,7 @@ DropDatabaseStmt Parser::parse_drop_database()
 {
     DropDatabaseStmt stmt{};
     stmt.name = parse_name();
-    match_symbol(';');
+    expect_symbol(';');
     return stmt;
 }
 
@@ -166,7 +177,7 @@ CreateTableStmt Parser::parse_create_table()
         stmt.columns.push_back(parse_column_def());
     }
     expect_symbol(')');
-    match_symbol(';');
+    expect_symbol(';');
     return stmt;
 }
 
@@ -174,7 +185,7 @@ DropTableStmt Parser::parse_drop_table()
 {
     DropTableStmt stmt{};
     stmt.name = parse_name();
-    match_symbol(';');
+    expect_symbol(';');
     return stmt;
 }
 
@@ -264,13 +275,13 @@ SelectStmt Parser::parse_select()
     SelectStmt stmt{};
     stmt.projection = parse_select_projection();
     expect_keyword(Keyword::from_kw);
-    stmt.table_name = parse_name();
+    stmt.table_name = parse_table_name();
     if (match_keyword(Keyword::where_kw)) {
         stmt.where = parse_select_where();
     } else {
         stmt.where = std::nullopt;
     }
-    match_symbol(';');
+    expect_symbol(';');
     return stmt;
 }
 
@@ -357,8 +368,26 @@ ComparisonOp Parser::parse_comparison_op()
 
 WhereCondition Parser::parse_select_where()
 {
+    Operand lhs = parse_operand();
+
+    if (match_keyword(Keyword::between_kw)) {
+        WhereBetween where{};
+        where.value = std::move(lhs);
+        where.low = parse_operand();
+        expect_keyword(Keyword::and_kw);
+        where.high = parse_operand();
+        return where;
+    }
+
+    if (match_keyword(Keyword::like_kw)) {
+        WhereLike where{};
+        where.value = std::move(lhs);
+        where.pattern = parse_operand();
+        return where;
+    }
+
     WhereComparison where{};
-    where.lhs = parse_operand();
+    where.lhs = std::move(lhs);
     where.op = parse_comparison_op();
     where.rhs = parse_operand();
     return where;
@@ -367,7 +396,7 @@ WhereCondition Parser::parse_select_where()
 Statement Parser::parse_update()
 {
     UpdateStmt stmt{};
-    stmt.table_name = parse_name();
+    stmt.table_name = parse_table_name();
     expect_keyword(Keyword::set_kw);
 
     UpdateAssignment first{};
@@ -390,7 +419,7 @@ Statement Parser::parse_update()
         stmt.where = std::nullopt;
     }
 
-    match_symbol(';');
+    expect_symbol(';');
     return stmt;
 }
 
@@ -398,14 +427,14 @@ Statement Parser::parse_delete()
 {
     DeleteStmt stmt{};
     expect_keyword(Keyword::from_kw);
-    stmt.table_name = parse_name();
+    stmt.table_name = parse_table_name();
     if (match_keyword(Keyword::where_kw)) {
         stmt.where = parse_select_where();
     } else {
         stmt.where = std::nullopt;
     }
     
-    match_symbol(';');
+    expect_symbol(';');
     return stmt;
 }
 

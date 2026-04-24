@@ -29,6 +29,7 @@ private:
     void expect_keyword(Keyword kw);
     void expect_symbol(char c);
     std::string parse_name();
+    std::string parse_table_name();
 
     Statement parse_create();
     Statement parse_drop();

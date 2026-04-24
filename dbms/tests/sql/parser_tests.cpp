@@ -46,6 +46,25 @@ TEST(parserTests, dropTable)
     EXPECT_EQ(drop->name, "users");
 }
 
+TEST(parserTests, stringLiteralCannotBeEntityName)
+{
+    {
+        Lexer lexer("CREATE DATABASE \"bad name\";");
+        Parser parser(lexer.tokenize());
+        EXPECT_THROW(parser.parse_statement(), std::runtime_error);
+    }
+    {
+        Lexer lexer("CREATE TABLE \"users\" (id INT);");
+        Parser parser(lexer.tokenize());
+        EXPECT_THROW(parser.parse_statement(), std::runtime_error);
+    }
+    {
+        Lexer lexer("CREATE TABLE users (\"id\" INT);");
+        Parser parser(lexer.tokenize());
+        EXPECT_THROW(parser.parse_statement(), std::runtime_error);
+    }
+}
+
 TEST(parserTests, insert)
 {
     Lexer lexer("INSERT INTO users (id, name, active) VALUE (10, \"alice\", true), (11, NULL, false);");

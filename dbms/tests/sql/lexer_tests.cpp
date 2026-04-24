@@ -30,13 +30,34 @@ TEST(lexerTests, createTable)
 
 TEST(lexerTests, stringLiteral)
 {
-    Lexer lexer("USE 'mydb';");
+    Lexer lexer("USE \"mydb\";");
     auto tokens = lexer.tokenize();
     ASSERT_GE(tokens.size(), 3u);
     EXPECT_EQ(tokens[0].keyword, Keyword::use_kw);
     EXPECT_EQ(tokens[1].type, TokenType::string_literal);
     EXPECT_EQ(tokens[1].text, "mydb");
     EXPECT_EQ(tokens[2].symbol, ';');
+}
+
+TEST(lexerTests, singleQuotedStringRejected)
+{
+    Lexer lexer("USE 'mydb';");
+    EXPECT_THROW((void)lexer.tokenize(), std::runtime_error);
+}
+
+TEST(lexerTests, mixedCaseKeywordRejected)
+{
+    Lexer lexer("CrEaTe DATABASE test;");
+    EXPECT_THROW((void)lexer.tokenize(), std::runtime_error);
+}
+
+TEST(lexerTests, mixedCaseIdentifierAllowed)
+{
+    Lexer lexer("CREATE TABLE userName (id INT);");
+    auto tokens = lexer.tokenize();
+    ASSERT_GE(tokens.size(), 4u);
+    EXPECT_EQ(tokens[2].type, TokenType::identifier);
+    EXPECT_EQ(tokens[2].text, "userName");
 }
 
 TEST(lexerTests, insert)

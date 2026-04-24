@@ -1,5 +1,7 @@
 #include "dbms/sql/cli.h"
 
+#include <algorithm>
+#include <cctype>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -26,6 +28,12 @@ std::string trim_copy(const std::string& text)
     return text.substr(begin, end - begin);
 }
 
+struct SqlSplitResult
+{
+    std::vector<std::string> complete_statements;
+    std::string tail;
+};
+
 bool is_escaped_quote(const std::string& text, std::size_t quote_index)
 {
     std::size_t slash_count = 0;
@@ -38,9 +46,9 @@ bool is_escaped_quote(const std::string& text, std::size_t quote_index)
     return (slash_count % 2u) != 0u;
 }
 
-std::vector<std::string> split_sql_statements(const std::string& script)
+SqlSplitResult split_sql_statements(const std::string& script)
 {
-    std::vector<std::string> statements;
+    SqlSplitResult result;
     std::string current;
     bool in_single_quote = false;
     bool in_double_quote = false;
@@ -60,17 +68,24 @@ std::vector<std::string> split_sql_statements(const std::string& script)
         if (ch == ';' && !in_single_quote && !in_double_quote) {
             const std::string statement = trim_copy(current);
             if (!statement.empty()) {
-                statements.push_back(statement);
+                result.complete_statements.push_back(statement);
             }
             current.clear();
         }
     }
+    result.tail = current;
+    return result;
+}
 
-    const std::string tail = trim_copy(current);
-    if (!tail.empty()) {
-        statements.push_back(tail);
-    }
-    return statements;
+bool is_exit_command(const std::string& statement)
+{
+    std::string normalized = trim_copy(statement);
+    std::transform(normalized.begin(), normalized.end(), normalized.begin(),
+                   [](unsigned char c) {
+                       return static_cast<char>(std::tolower(c));
+                   });
+
+    return normalized == "exit;" || normalized == "quit;";
 }
 
 bool execute_sql_and_print(dbms::SqlApi& api, const std::string& sql)
@@ -97,8 +112,13 @@ bool run_script_file(dbms::SqlApi& api, const std::string& script_path)
     }
 
     const std::string script((std::istreambuf_iterator<char>(input)),
-                             std::istreambuf_iterator<char>());
-    const std::vector<std::string> statements = split_sql_statements(script);
+                             std::istreambuf_iterator<char>()); //способ прочитать весь файл в одну строку
+    const SqlSplitResult split = split_sql_statements(script);
+    std::vector<std::string> statements = split.complete_statements;
+    const std::string tail = trim_copy(split.tail);
+    if (!tail.empty()) {
+        statements.push_back(tail);
+    }
 
     bool all_ok = true;
     for (const std::string& statement : statements) {
@@ -114,18 +134,30 @@ void run_interactive(dbms::SqlApi& api)
     std::cout << "Good Luck\n";
 
     std::string line;
+    std::string pending_sql;
     while (true) {
-        std::cout << "> ";
+        std::cout << (pending_sql.empty() ? "> " : "... ");
         if (!std::getline(std::cin, line)) {
             break;
         }
-        if (line == "exit;" || line == "quit;") {
-            break;
-        }
-        if (line.empty()) {
+        if (line.empty() && pending_sql.empty()) {
             continue;
         }
-        (void)execute_sql_and_print(api, line);
+        pending_sql.append(line);
+        pending_sql.push_back('\n');
+
+        const SqlSplitResult split = split_sql_statements(pending_sql);
+        for (const std::string& statement : split.complete_statements) {
+            if (is_exit_command(statement)) {
+                return;
+            }
+            (void)execute_sql_and_print(api, statement);
+        }
+
+        pending_sql = split.tail;
+        if (trim_copy(pending_sql).empty()) {
+            pending_sql.clear();
+        }
     }
 }
 

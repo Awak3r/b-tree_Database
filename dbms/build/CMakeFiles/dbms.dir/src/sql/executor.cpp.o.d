@@ -333,7 +333,22 @@ CMakeFiles/dbms.dir/src/sql/executor.cpp.o: \
  /usr/include/c++/11/any \
  /home/study/coursework/dbms/build/_deps/nlohmann_json-src/include/nlohmann/detail/macro_unscope.hpp \
  /home/study/coursework/dbms/build/_deps/nlohmann_json-src/include/nlohmann/thirdparty/hedley/hedley_undef.hpp \
- /usr/include/c++/11/charconv /usr/include/c++/11/unordered_set \
+ /usr/include/c++/11/charconv /usr/include/c++/11/regex \
+ /usr/include/c++/11/bitset /usr/include/c++/11/stack \
+ /usr/include/c++/11/deque /usr/include/c++/11/bits/stl_deque.h \
+ /usr/include/c++/11/bits/deque.tcc /usr/include/c++/11/bits/stl_stack.h \
+ /usr/include/c++/11/bits/regex_constants.h \
+ /usr/include/c++/11/bits/regex_error.h \
+ /usr/include/c++/11/bits/regex_automaton.h \
+ /usr/include/c++/11/bits/regex_automaton.tcc \
+ /usr/include/c++/11/bits/regex_scanner.h \
+ /usr/include/c++/11/bits/regex_scanner.tcc \
+ /usr/include/c++/11/bits/regex_compiler.h \
+ /usr/include/c++/11/bits/regex_compiler.tcc \
+ /usr/include/c++/11/bits/regex.h /usr/include/c++/11/bits/regex.tcc \
+ /usr/include/c++/11/bits/regex_executor.h \
+ /usr/include/c++/11/bits/regex_executor.tcc \
+ /usr/include/c++/11/unordered_set \
  /usr/include/c++/11/bits/unordered_set.h \
  /home/study/coursework/dbms/include/dbms/index/index_manager.h \
  /home/study/coursework/dbms/include/dbms/index/b_tree_disk_index.h \

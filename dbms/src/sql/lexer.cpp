@@ -1,5 +1,5 @@
 #include "dbms/sql/lexer.h"
-
+#include <stdexcept>
 namespace dbms
 {
 
@@ -26,7 +26,10 @@ std::vector<Token> Lexer::tokenize()
             tokens.push_back(read_number());
             continue;
         }
-        if (c == '\'' || c == '"') {
+        if (c == '\'') {
+            throw std::runtime_error("Single-quoted strings are not allowed, use double quotes");
+        }
+        if (c == '"') {
             tokens.push_back(read_string());
             continue;
         }
@@ -64,11 +67,18 @@ Token Lexer::read_identifier_or_keyword()
     }
     std::string text(_input.substr(start, _pos - start));
     std::string lower = text;
+    bool has_lower = false;
+    bool has_upper = false;
     for (char& ch : lower) {
+        has_lower = has_lower || (ch >= 'a' && ch <= 'z');
+        has_upper = has_upper || (ch >= 'A' && ch <= 'Z');
         ch = to_lower(ch);
     }
     Keyword kw{};
     if (match_keyword(lower, kw)) {
+        if (has_lower && has_upper) {
+            throw std::runtime_error("Mixed-case keywords are not allowed");
+        }
         Token t{};
         t.type = TokenType::keyword;
         t.text = text;
@@ -100,16 +110,19 @@ Token Lexer::read_number()
 
 Token Lexer::read_string()
 {
-    char quote = _input[_pos];
+    if (_input[_pos] != '"') {
+        throw std::runtime_error("Only double-quoted string literals are supported");
+    }
     _pos += 1;
     std::size_t start = _pos;
-    while (_pos < _input.size() && _input[_pos] != quote) {
+    while (_pos < _input.size() && _input[_pos] != '"') {
         _pos += 1;
+    }
+    if (_pos >= _input.size()) {
+        throw std::runtime_error("Unterminated string literal");
     }
     std::string text(_input.substr(start, _pos - start));
-    if (_pos < _input.size() && _input[_pos] == quote) {
-        _pos += 1;
-    }
+    _pos += 1; // closing "
     Token t{};
     t.type = TokenType::string_literal;
     t.text = text;
@@ -117,6 +130,7 @@ Token Lexer::read_string()
     t.symbol = '\0';
     return t;
 }
+
 
 Token Lexer::read_symbol()
 {
@@ -145,7 +159,7 @@ Token Lexer::read_symbol()
 bool Lexer::is_symbol(char c)
 {
     return c == '(' || c == ')' || c == ',' || c == ';' || c == '-' ||
-           c == '*' || c == '=' || c == '!' || c == '<' || c == '>';
+           c == '*' || c == '=' || c == '!' || c == '<' || c == '>' || c == '.';
 }
 
 bool Lexer::is_whitespace(char c)

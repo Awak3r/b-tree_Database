@@ -433,12 +433,56 @@ TEST(tzPoint0Pass, SyntaxAndSemanticErrorsAreInformative)
     const dbms::SqlResponse syntax_error = run_sql(api, "SELECT FROM;");
     EXPECT_FALSE(syntax_error.ok);
     EXPECT_FALSE(syntax_error.error.empty());
+    EXPECT_NE(syntax_error.error.find("Parser error"), std::string::npos);
 
     expect_sql_ok(api, "CREATE DATABASE test;");
     expect_sql_ok(api, "USE test;");
+    expect_sql_ok(api, "CREATE TABLE users (id INT INDEXED, name STRING, age INT NOT NULL);");
+    expect_sql_ok(api, "INSERT INTO users (id, name, age) VALUE (1, \"alice\", 20);");
+
     const dbms::SqlResponse semantic_error = run_sql(api, "SELECT * FROM missing;");
     EXPECT_FALSE(semantic_error.ok);
     EXPECT_FALSE(semantic_error.error.empty());
+    EXPECT_NE(semantic_error.error.find("Semantic error"), std::string::npos);
+    EXPECT_NE(semantic_error.error.find("missing"), std::string::npos);
+
+    const dbms::SqlResponse type_error = run_sql(api, "INSERT INTO users (id, name, age) VALUE (\"bad\", \"bob\", 25);");
+    EXPECT_FALSE(type_error.ok);
+    EXPECT_NE(type_error.error.find("Type error"), std::string::npos);
+    EXPECT_NE(type_error.error.find("id"), std::string::npos);
+
+    const dbms::SqlResponse duplicate_error = run_sql(api, "INSERT INTO users (id, name, age) VALUE (1, \"dup\", 30);");
+    EXPECT_FALSE(duplicate_error.ok);
+    EXPECT_NE(duplicate_error.error.find("Constraint error"), std::string::npos);
+    EXPECT_NE(duplicate_error.error.find("duplicate INDEXED key"), std::string::npos);
+
+    const dbms::SqlResponse where_error = run_sql(api, "SELECT id FROM users WHERE missing == 1;");
+    EXPECT_FALSE(where_error.ok);
+    EXPECT_NE(where_error.error.find("Semantic error"), std::string::npos);
+    EXPECT_NE(where_error.error.find("missing"), std::string::npos);
+
+    const dbms::SqlResponse regex_error = run_sql(api, "SELECT name FROM users WHERE name LIKE \"[\";");
+    EXPECT_FALSE(regex_error.ok);
+    EXPECT_NE(regex_error.error.find("Runtime error"), std::string::npos);
+    EXPECT_NE(regex_error.error.find("invalid LIKE regex"), std::string::npos);
+
+    const dbms::SqlResponse not_null_error = run_sql(api, "UPDATE users SET age = NULL WHERE id == 1;");
+    EXPECT_FALSE(not_null_error.ok);
+    EXPECT_NE(not_null_error.error.find("Constraint error"), std::string::npos);
+    EXPECT_NE(not_null_error.error.find("age"), std::string::npos);
+
+    const std::vector<dbms::SqlResponse> checked_errors = {
+        syntax_error,
+        semantic_error,
+        type_error,
+        duplicate_error,
+        where_error,
+        regex_error,
+        not_null_error
+    };
+    for (const dbms::SqlResponse& response : checked_errors) {
+        EXPECT_EQ(response.error.find("Execution failed"), std::string::npos);
+    }
 }
 
 TEST(tzPoint0Pass, SelectResultIsJsonArray)
@@ -523,6 +567,10 @@ TEST(tzPoint0Pass, IdentifierRulesWorkForAllowedAndForbiddenNames)
 
     {
         const dbms::SqlResponse bad = run_sql(api, "CREATE DATABASE 1bad;");
+        EXPECT_FALSE(bad.ok);
+    }
+    {
+        const dbms::SqlResponse bad = run_sql(api, "CREATE DATABASE \"bad name\";");
         EXPECT_FALSE(bad.ok);
     }
 

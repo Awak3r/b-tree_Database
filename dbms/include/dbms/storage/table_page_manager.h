@@ -132,6 +132,7 @@ private:
     void write_header(const TableHeader& header)
     {
         Page page;
+        (void)_storage.read_page(0, page);
         std::memcpy(page.data().data(), &header, sizeof(TableHeader));
         _storage.write_page(0, page);
     }

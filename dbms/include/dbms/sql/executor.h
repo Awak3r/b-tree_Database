@@ -11,6 +11,12 @@
 
 namespace dbms
 {
+    struct ResolvedTableName
+    {
+        std::string db_name;
+        std::string table_name;
+    };
+
 
 class Executor
 {
@@ -19,10 +25,12 @@ public:
 
     const std::string& current_db() const { return _current_db; }
     const std::string& last_select_json() const { return _last_select_json; }
+    const std::string& last_error() const { return _last_error; }
 
     bool execute(const Statement& stmt);
 
 private:
+
     using row_values_type = std::vector<std::optional<std::string>>;
 
     Dbms& _dbms;
@@ -31,7 +39,9 @@ private:
     std::vector<row_values_type> _last_select_rows;
     std::string _last_select_json;
     std::vector<std::string> _last_select_column_types;
+    mutable std::string _last_error;
 
+    bool fail(std::string message) const;
     void build_last_select_json();
     bool execute_create_database(const CreateDatabaseStmt& stmt);
     bool execute_drop_database(const DropDatabaseStmt& stmt);
@@ -44,6 +54,8 @@ private:
     bool execute_delete(const DeleteStmt& stmt);
 
     Database* find_current_database();
+    Database* find_database(const std::string& db_name);
+    std::optional<ResolvedTableName> resolve_table_name(const std::string& raw_name) const;
     static Table* find_table(Database& db, const std::string& table_name);
     static bool parse_int_strict(const std::string& text, int& out_value);
     static bool parse_bool_strict(const std::string& text, bool& out_value);
@@ -58,7 +70,8 @@ private:
                               std::vector<int>& bool_index_keys,
                               std::vector<std::string>& string_index_keys,
                               row_values_type& out_row) const;
-    bool collect_matching_rows(const Table& table,
+    bool collect_matching_rows(const std::string& db_name,
+                               const Table& table,
                                const std::optional<WhereCondition>& where,
                                std::vector<std::pair<Rid, row_values_type>>& out_rows) const;
     static bool is_type_valid(const std::string& type);

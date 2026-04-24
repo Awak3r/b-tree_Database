@@ -198,7 +198,7 @@ TEST(cliScriptTests, semicolonInsideStringIsNotStatementDelimiter)
     EXPECT_EQ((*parsed)[0]["name"], "a;bc");
 }
 
-TEST(cliScriptTests, tailStatementWithoutFinalSemicolonExecutes)
+TEST(cliScriptTests, tailStatementWithoutFinalSemicolonFails)
 {
     const std::string script =
         "CREATE DATABASE test;\n"
@@ -209,14 +209,9 @@ TEST(cliScriptTests, tailStatementWithoutFinalSemicolonExecutes)
 
     const CliRunResult result = run_script("tail_without_semicolon", script);
 
-    EXPECT_EQ(result.exit_code, 0);
-
-    const auto parsed = try_parse_last_json_array(result.stdout_text);
-    ASSERT_TRUE(parsed.has_value());
-    ASSERT_TRUE(parsed->is_array());
-    ASSERT_EQ(parsed->size(), 1u);
-    EXPECT_EQ((*parsed)[0]["id"], 1);
-    EXPECT_EQ((*parsed)[0]["name"], "tail");
+    EXPECT_EQ(result.exit_code, 1);
+    EXPECT_NE(result.stdout_text.find("ERROR:"), std::string::npos);
+    EXPECT_EQ(count_occurrences(result.stdout_text, "OK\n"), 4u);
 }
 
 TEST(cliScriptTests, stressScriptWithManyStatementsStaysStable)
