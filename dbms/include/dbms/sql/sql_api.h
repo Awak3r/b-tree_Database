@@ -1,6 +1,7 @@
 #ifndef COURSEWORK_DBMS_SQL_API_H
 #define COURSEWORK_DBMS_SQL_API_H
 
+#include <mutex>
 #include <string>
 
 #include "dbms/sql/executor.h"
@@ -24,6 +25,7 @@ public:
     SqlResponse execute_sql(const std::string& sql);
 
 private:
+    std::mutex _mutex;
     Executor _exec;
 };
 

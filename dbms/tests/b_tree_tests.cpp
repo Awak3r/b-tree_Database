@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <cstdio>
+#include <filesystem>
 
 #include "dbms/index/b_tree_disk_index.h"
 
@@ -111,6 +112,19 @@ TEST(bTreeDiskIndexNegativeTests, test1)
     dbms::Rid out{};
     EXPECT_FALSE(index.find(123, out));
     EXPECT_FALSE(index.erase(123));
+}
+
+TEST(bTreeDiskIndexNegativeTests, insertReturnsFalseWhenIndexPathIsDirectory)
+{
+    const std::filesystem::path path = "/home/study/coursework/dbms/data/btree_index_path_is_dir.idx";
+    std::error_code ec;
+    std::filesystem::remove_all(path, ec);
+    std::filesystem::create_directories(path, ec);
+
+    dbms::BTreeDiskIndex<int> index(path.string());
+    EXPECT_FALSE(index.insert(1, dbms::Rid{1, 1}));
+
+    std::filesystem::remove_all(path, ec);
 }
 
 int main(int argc, char** argv)

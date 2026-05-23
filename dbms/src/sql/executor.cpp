@@ -85,6 +85,13 @@ struct IndexWherePlan
     std::string literal;
 };
 
+struct IndexBetweenPlan
+{
+    std::size_t column_idx = 0;
+    std::string low_literal;
+    std::string high_literal;
+};
+
 ComparisonOp reverse_comparison_op(ComparisonOp op)
 {
     switch (op) {
@@ -152,6 +159,36 @@ bool try_build_index_where_plan(const WhereComparison& where,
     out_plan.column_idx = column_idx;
     out_plan.op = op;
     out_plan.literal = std::move(literal);
+    return true;
+}
+
+bool try_build_index_between_plan(const WhereBetween& where,
+                                  const std::vector<Column>& columns,
+                                  const std::unordered_map<std::string, std::size_t>& col_pos,
+                                  IndexBetweenPlan& out_plan)
+{
+    const auto* value_col = std::get_if<ColumnRef>(&where.value);
+    const auto* low_lit = std::get_if<Literal>(&where.low);
+    const auto* high_lit = std::get_if<Literal>(&where.high);
+    if (value_col == nullptr || low_lit == nullptr || high_lit == nullptr) {
+        return false;
+    }
+    if (low_lit->is_null || high_lit->is_null) {
+        return false;
+    }
+
+    const auto it = col_pos.find(value_col->name);
+    if (it == col_pos.end()) {
+        return false;
+    }
+    const std::size_t column_idx = it->second;
+    if (column_idx >= columns.size() || !columns[column_idx].indexed) {
+        return false;
+    }
+
+    out_plan.column_idx = column_idx;
+    out_plan.low_literal = low_lit->text;
+    out_plan.high_literal = high_lit->text;
     return true;
 }
 
@@ -246,6 +283,11 @@ bool collect_rids_from_index(const std::filesystem::path& idx_path,
         return true; // fallback to full scan for !=
     }
 
+    std::error_code ec;
+    if (!std::filesystem::is_regular_file(idx_path, ec)) {
+        return false;
+    }
+
     if (indexed_column.type == "INT") {
         int key = 0;
         if (!parse_int_local(literal, key)) {
@@ -276,6 +318,78 @@ bool collect_rids_from_index(const std::filesystem::path& idx_path,
         out_used_index = true;
         IndexManager<StringIndexKey> index(idx_path.string());
         collect_string_index_rids(index, key, op, out_rids);
+        return true;
+    }
+
+    return false;
+}
+
+bool collect_between_rids_from_index(const std::filesystem::path& idx_path,
+                                     const Column& indexed_column,
+                                     const std::string& low_literal,
+                                     const std::string& high_literal,
+                                     bool& out_used_index,
+                                     std::vector<Rid>& out_rids)
+{
+    out_used_index = false;
+    out_rids.clear();
+
+    std::error_code ec;
+    if (!std::filesystem::is_regular_file(idx_path, ec)) {
+        return false;
+    }
+
+    if (indexed_column.type == "INT") {
+        int low = 0;
+        int high = 0;
+        if (!parse_int_local(low_literal, low) || !parse_int_local(high_literal, high)) {
+            return true;
+        }
+        out_used_index = true;
+        IndexManager<int> index(idx_path.string());
+        const auto pairs = index.range(low, high);
+        for (const auto& entry : pairs) {
+            if (entry.first >= low && entry.first < high) {
+                out_rids.push_back(entry.second);
+            }
+        }
+        return true;
+    }
+
+    if (indexed_column.type == "BOOL") {
+        bool low_bool = false;
+        bool high_bool = false;
+        if (!parse_bool_local(low_literal, low_bool) || !parse_bool_local(high_literal, high_bool)) {
+            return true;
+        }
+        const int low = low_bool ? 1 : 0;
+        const int high = high_bool ? 1 : 0;
+        out_used_index = true;
+        IndexManager<int> index(idx_path.string());
+        const auto pairs = index.range(low, high);
+        for (const auto& entry : pairs) {
+            if (entry.first >= low && entry.first < high) {
+                out_rids.push_back(entry.second);
+            }
+        }
+        return true;
+    }
+
+    if (indexed_column.type == "STRING") {
+        StringIndexKey low{};
+        StringIndexKey high{};
+        if (!StringIndexKey::from_string(low_literal, low) ||
+            !StringIndexKey::from_string(high_literal, high)) {
+            return true;
+        }
+        out_used_index = true;
+        IndexManager<StringIndexKey> index(idx_path.string());
+        const auto pairs = index.range(low, high);
+        for (const auto& entry : pairs) {
+            if (!(entry.first < low) && entry.first < high) {
+                out_rids.push_back(entry.second);
+            }
+        }
         return true;
     }
 
@@ -725,7 +839,67 @@ bool write_modified_pages_with_rollback(TablePageManager& manager,
     return true;
 }
 
+struct OrderedPageWrite
+{
+    int page_id;
+    Page page;
+    std::optional<Page> original_page;
+};
 
+template<typename FailureFn>
+bool write_ordered_pages_with_rollback(TablePageManager& manager,
+                                       const std::vector<OrderedPageWrite>& page_writes,
+                                       FailureFn&& on_failure)
+{
+    std::vector<std::size_t> written_pages;
+    written_pages.reserve(page_writes.size());
+
+    for (std::size_t i = 0; i < page_writes.size(); ++i) {
+        const OrderedPageWrite& write = page_writes[i];
+        if (!manager.write_page(write.page_id, write.page)) {
+            if (write.original_page.has_value()) {
+                manager.write_page(write.page_id, *write.original_page);
+            }
+            while (!written_pages.empty()) {
+                const OrderedPageWrite& written = page_writes[written_pages.back()];
+                written_pages.pop_back();
+                if (written.original_page.has_value()) {
+                    manager.write_page(written.page_id, *written.original_page);
+                }
+            }
+            on_failure();
+            return false;
+        }
+        written_pages.push_back(i);
+    }
+    return true;
+}
+
+
+}
+
+std::string Executor::current_db() const
+{
+    std::lock_guard<std::mutex> lock(_mutex);
+    return _current_db;
+}
+
+std::string Executor::last_select_json() const
+{
+    std::lock_guard<std::mutex> lock(_mutex);
+    return _last_select_json;
+}
+
+std::string Executor::last_error() const
+{
+    std::lock_guard<std::mutex> lock(_mutex);
+    return _last_error;
+}
+
+bool Executor::last_operation_used_index() const
+{
+    std::lock_guard<std::mutex> lock(_mutex);
+    return _last_operation_used_index;
 }
 
 bool Executor::fail(std::string message) const
@@ -736,7 +910,9 @@ bool Executor::fail(std::string message) const
 
 bool Executor::execute(const Statement& stmt)
 {
+    std::lock_guard<std::mutex> lock(_mutex);
     _last_error.clear();
+    _last_operation_used_index = false;
     if (const auto* s = std::get_if<CreateDatabaseStmt>(&stmt)) {
         return execute_create_database(*s);
     }
@@ -964,21 +1140,35 @@ bool Executor::execute_create_table(const CreateTableStmt& stmt)
     if (ec) {
         return fail("Runtime error: cannot create directory for database `" + _current_db + "`: " + ec.message());
     }
-    TablePageManager manager(table_path(_current_db, stmt.name).string());
+    const std::filesystem::path tbl_path = table_path(_current_db, stmt.name);
+    TablePageManager manager(tbl_path.string());
     if (!manager.write_schema(columns)) {
         return fail("Runtime error: cannot write schema for table `" + _current_db + "." + stmt.name + "`");
     }
+    std::vector<std::filesystem::path> created_index_paths;
     for (const auto& col : columns) {
         if (!col.indexed) {
             continue;
         }
+        const std::filesystem::path idx_path = index_path(_current_db, stmt.name, col.name);
         if (col.type == "INT" || col.type == "BOOL") {
-            IndexManager<int> index(index_path(_current_db, stmt.name, col.name).string());
+            IndexManager<int> index(idx_path.string());
         }
         else if (col.type == "STRING") {
-            IndexManager<StringIndexKey> index(index_path(_current_db, stmt.name, col.name).string());
+            IndexManager<StringIndexKey> index(idx_path.string());
         }
 
+        std::error_code idx_ec;
+        if (!std::filesystem::is_regular_file(idx_path, idx_ec)) {
+            std::error_code cleanup_ec;
+            for (const auto& created_path : created_index_paths) {
+                std::filesystem::remove(created_path, cleanup_ec);
+            }
+            std::filesystem::remove(tbl_path, cleanup_ec);
+            return fail("Runtime error: cannot create index for `" + _current_db + "." +
+                        stmt.name + "." + col.name + "` at `" + idx_path.string() + "`");
+        }
+        created_index_paths.push_back(idx_path);
     }
     tables.push_back(Table(stmt.name, std::move(columns)));
     return true;
@@ -996,7 +1186,23 @@ bool Executor::execute_drop_table(const DropTableStmt& stmt)
         return fail("Semantic error: table `" + _current_db + "." + stmt.name + "` does not exist");
     }
     std::error_code ec;
-    std::filesystem::remove(table_path(_current_db, stmt.name), ec);
+    const std::filesystem::path tbl_path = table_path(_current_db, stmt.name);
+    if (!std::filesystem::is_regular_file(tbl_path, ec)) {
+        return fail("Runtime error: table file for `" + _current_db + "." + stmt.name +
+                    "` is missing or is not a regular file");
+    }
+    for (const auto& col : it->columns()) {
+        if (!col.indexed) {
+            continue;
+        }
+        const std::filesystem::path idx_path = index_path(_current_db, stmt.name, col.name);
+        if (std::filesystem::exists(idx_path, ec) && !std::filesystem::is_regular_file(idx_path, ec)) {
+            return fail("Runtime error: index for `" + _current_db + "." + stmt.name + "." +
+                        col.name + "` is not a regular file");
+        }
+    }
+
+    std::filesystem::remove(tbl_path, ec);
     if (ec) {
         return fail("Runtime error: cannot remove table file for `" + _current_db + "." + stmt.name + "`: " + ec.message());
     }
@@ -1126,8 +1332,10 @@ bool Executor::collect_matching_rows(const std::string& db_name,
     }
 
     const WhereComparison* where_cmp = nullptr;
+    const WhereBetween* where_between = nullptr;
     if (where.has_value()) {
         where_cmp = std::get_if<WhereComparison>(&where.value());
+        where_between = std::get_if<WhereBetween>(&where.value());
     }
 
     TablePageManager manager(table_path(db_name, table.name()).string());
@@ -1145,11 +1353,46 @@ bool Executor::collect_matching_rows(const std::string& db_name,
             }
             if (used_index) {
                 used_index_candidates = true;
+                _last_operation_used_index = true;
                 out_rows.reserve(rid_candidates.size());
                 for (const Rid& rid : rid_candidates) {
                     row_values_type row;
                     if (!read_row_by_rid(manager, rid, columns.size(), row)) {
+                        return fail("Runtime error: index `" + idx_path.string() +
+                                    "` points to unreadable table row");
+                    }
+                    if (where.has_value() && !evaluate_where_condition(where.value(), row, columns, col_pos)) {
                         continue;
+                    }
+                    out_rows.push_back({rid, std::move(row)});
+                }
+            }
+        }
+    }
+    if (!used_index_candidates && where_between != nullptr) {
+        IndexBetweenPlan index_plan{};
+        if (try_build_index_between_plan(*where_between, columns, col_pos, index_plan)) {
+            const Column& idx_col = columns[index_plan.column_idx];
+            const std::filesystem::path idx_path = index_path(db_name, table.name(), idx_col.name);
+            bool used_index = false;
+            std::vector<Rid> rid_candidates;
+            if (!collect_between_rids_from_index(idx_path,
+                                                 idx_col,
+                                                 index_plan.low_literal,
+                                                 index_plan.high_literal,
+                                                 used_index,
+                                                 rid_candidates)) {
+                return fail("Runtime error: cannot read index `" + idx_path.string() + "` for column `" + idx_col.name + "`");
+            }
+            if (used_index) {
+                used_index_candidates = true;
+                _last_operation_used_index = true;
+                out_rows.reserve(rid_candidates.size());
+                for (const Rid& rid : rid_candidates) {
+                    row_values_type row;
+                    if (!read_row_by_rid(manager, rid, columns.size(), row)) {
+                        return fail("Runtime error: index `" + idx_path.string() +
+                                    "` points to unreadable table row");
                     }
                     if (where.has_value() && !evaluate_where_condition(where.value(), row, columns, col_pos)) {
                         continue;
@@ -1171,7 +1414,8 @@ bool Executor::collect_matching_rows(const std::string& db_name,
         for (int page_id = 1; page_id < th.next_page_id; ++page_id) {
             Page page;
             if (!manager.read_page(page_id, page)) {
-                continue;
+                return fail("Runtime error: cannot read table page " + std::to_string(page_id) +
+                            " for `" + db_name + "." + table.name() + "`");
             }
             const PageHeader ph = page.read_header();
             for (int slot = 0; slot < ph.slots_count; ++slot) {
@@ -1306,6 +1550,26 @@ bool Executor::execute_insert(const InsertStmt& stmt)
         return fail("Runtime error: cannot create directory for database `" + resolved->db_name + "`: " + ec.message());
     }
     TablePageManager manager(table_path(resolved->db_name, table->name()).string());
+
+    Page original_header_page;
+    if (!manager.read_page(0, original_header_page)) {
+        return fail("Runtime error: cannot read table header for `" +
+                    resolved->db_name + "." + table->name() + "`");
+    }
+
+    TableHeader header{};
+    std::memcpy(&header, original_header_page.data().data(), sizeof(TableHeader));
+    if (header.next_page_id < 1) {
+        return fail("Runtime error: invalid table header for `" +
+                    resolved->db_name + "." + table->name() + "`");
+    }
+
+    int next_page_id = header.next_page_id;
+    std::vector<OrderedPageWrite> page_writes;
+    page_writes.reserve(pending_rows.size() + 1u);
+    std::vector<IndexMutation> index_changes;
+    index_changes.reserve(pending_rows.size() * columns.size());
+
     for (const auto& row : pending_rows) {
         Record record(row.values);
         std::vector<unsigned char> bytes = serialize_record(record, columns.size());
@@ -1315,45 +1579,43 @@ bool Executor::execute_insert(const InsertStmt& stmt)
             return fail("Runtime error: record is too large for a table page in `" +
                         resolved->db_name + "." + table->name() + "`");
         }
-        int page_id = manager.allocate_page();
-        if (!manager.write_page(page_id, page)) {
-            return fail("Runtime error: cannot write table page for `" +
-                        resolved->db_name + "." + table->name() + "`");
-        }
+        const int page_id = next_page_id;
+        ++next_page_id;
         const Rid rid{page_id, slot_id};
+        page_writes.push_back(OrderedPageWrite{page_id, page, std::nullopt});
+
         for (std::size_t i = 0; i < columns.size(); ++i) {
             if (!columns[i].indexed) {
                 continue;
             }
-            const std::filesystem::path idx_path = index_path(resolved->db_name, table->name(), columns[i].name);
-            if (columns[i].type == "INT") {
-                IndexManager<int> index(idx_path.string());
-                if (!index.insert(row.int_index_keys[i], rid)) {
-                    return fail("Runtime error: cannot insert key into index `" + idx_path.string() + "`");
-                }
-                continue;
-            }
-            if (columns[i].type == "STRING") {
-                StringIndexKey key{};
-                if (!StringIndexKey::from_string(row.string_index_keys[i], key)) {
-                    return fail("Constraint error: value for INDEXED STRING column `" + columns[i].name +
-                                "` is too long for the index key");
-                }
-                IndexManager<StringIndexKey> index(idx_path.string());
-                if (!index.insert(key, rid)) {
-                    return fail("Runtime error: cannot insert key into index `" + idx_path.string() + "`");
-                }
-                continue;
-            }
-            if (columns[i].type == "BOOL") {
-                IndexManager<int> index(idx_path.string());
-                if (!index.insert(row.bool_index_keys[i], rid)) {
-                    return fail("Runtime error: cannot insert key into index `" + idx_path.string() + "`");
-                }
-                continue;
-            }
-            return fail("Semantic error: indexed column `" + columns[i].name + "` has unsupported type `" + columns[i].type + "`");
+            index_changes.push_back(IndexMutation{i, rid, std::nullopt, row.values[i]});
         }
+    }
+
+    Page new_header_page = original_header_page;
+    header.next_page_id = next_page_id;
+    std::memcpy(new_header_page.data().data(), &header, sizeof(TableHeader));
+    page_writes.push_back(OrderedPageWrite{0, new_header_page, original_header_page});
+
+    std::size_t applied_changes = 0;
+    const auto resolve_idx_path = [&](std::size_t column_idx) {
+        return index_path(resolved->db_name, table->name(), columns[column_idx].name);
+    };
+    if (!apply_index_mutations_with_rollback(index_changes, columns, resolve_idx_path, applied_changes)) {
+        return fail("Runtime error: cannot update one or more indexes for INSERT into `" +
+                    resolved->db_name + "." + table->name() + "`");
+    }
+
+    if (!write_ordered_pages_with_rollback(manager,
+                                           page_writes,
+                                           [&]() {
+                                               rollback_applied_index_mutations(index_changes,
+                                                                                applied_changes,
+                                                                                columns,
+                                                                                resolve_idx_path);
+                                           })) {
+        return fail("Runtime error: cannot write inserted table pages for `" +
+                    resolved->db_name + "." + table->name() + "`");
     }
 
     return true;

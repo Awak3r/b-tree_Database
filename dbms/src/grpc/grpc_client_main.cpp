@@ -41,9 +41,15 @@ bool is_escaped_quote(const std::string& text, std::size_t quote_index)
     return (slash_count % 2u) != 0u;
 }
 
-std::vector<std::string> split_sql_statements(const std::string& script)
+struct SqlSplitResult
 {
-    std::vector<std::string> statements;
+    std::vector<std::string> complete;
+    std::string tail;
+};
+
+SqlSplitResult split_sql_statements(const std::string& script)
+{
+    SqlSplitResult result;
     std::string current;
     bool in_single_quote = false;
     bool in_double_quote = false;
@@ -63,17 +69,23 @@ std::vector<std::string> split_sql_statements(const std::string& script)
         if (ch == ';' && !in_single_quote && !in_double_quote) {
             const std::string statement = trim_copy(current);
             if (!statement.empty()) {
-                statements.push_back(statement);
+                result.complete.push_back(statement);
             }
             current.clear();
         }
     }
+    result.tail = current;
+    return result;
+}
 
-    const std::string tail = trim_copy(current);
-    if (!tail.empty()) {
-        statements.push_back(tail);
+bool is_exit_command(const std::string& s)
+{
+    std::string t = trim_copy(s);
+    if (!t.empty() && t.back() == ';') {
+        t.pop_back();
+        t = trim_copy(t);
     }
-    return statements;
+    return t == "exit" || t == "quit";
 }
 
 class GrpcSqlClient
@@ -154,7 +166,12 @@ bool run_script(GrpcSqlClient& client, const std::string& script_path)
 
     const std::string script((std::istreambuf_iterator<char>(input)),
                              std::istreambuf_iterator<char>());
-    const std::vector<std::string> statements = split_sql_statements(script);
+    const SqlSplitResult split = split_sql_statements(script);
+    std::vector<std::string> statements = split.complete;
+    const std::string tail = trim_copy(split.tail);
+    if (!tail.empty()) {
+        statements.push_back(tail);
+    }
 
     bool all_ok = true;
     for (const std::string& statement : statements) {
@@ -167,22 +184,36 @@ bool run_script(GrpcSqlClient& client, const std::string& script_path)
 
 void run_interactive(GrpcSqlClient& client)
 {
-    std::cout << "DBMS gRPC SQL client\n";
-    std::cout << "Type one SQL statement per line. Use 'exit' or 'quit' to stop.\n";
+    std::cout << "DBMS gRPC SQL client. Commands end with ';'.\n";
 
     std::string line;
+    std::string pending;
     while (true) {
-        std::cout << "> ";
+        std::cout << (pending.empty() ? "> " : "... ");
         if (!std::getline(std::cin, line)) {
             break;
         }
-        if (line == "exit;" || line == "quit;") {
-            break;
-        }
-        if (line.empty()) {
+        if (line.empty() && pending.empty()) {
             continue;
         }
-        (void)client.execute_and_print(line);
+        if (pending.empty() && is_exit_command(line)) {
+            break;
+        }
+
+        pending += line;
+        pending += '\n';
+
+        const SqlSplitResult split = split_sql_statements(pending);
+        for (const std::string& stmt : split.complete) {
+            if (is_exit_command(stmt)) {
+                return;
+            }
+            (void)client.execute_and_print(stmt);
+        }
+        pending = split.tail;
+        if (trim_copy(pending).empty()) {
+            pending.clear();
+        }
     }
 }
 

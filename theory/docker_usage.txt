@@ -1,0 +1,70 @@
+Docker образы
+=============
+
+Опубликованы на Docker Hub:
+  awak3r/dbms-server  — содержит prog (CLI) + dbms_grpc_server
+  awak3r/dbms-client  — содержит dbms_grpc_client
+
+
+ОБРАЗ: awak3r/dbms-server
+--------------------------
+
+Содержит два бинарника:
+  /usr/local/bin/prog              — CLI СУБД (интерактивный и пакетный режим)
+  /usr/local/bin/dbms_grpc_server  — gRPC сервер
+
+По умолчанию запускает gRPC сервер на 0.0.0.0:50051, данные хранит в /data.
+Переменная окружения DBMS_DATA_ROOT задаёт путь к данным внутри контейнера.
+
+Запустить gRPC сервер:
+
+  docker run -d -p 50051:50051 -v /my/data:/data awak3r/dbms-server:latest
+
+Запустить CLI с SQL скриптом (пакетный режим):
+
+  docker run --rm \
+    -v /path/to/script.sql:/q.sql \
+    -v /my/data:/data \
+    --entrypoint /usr/local/bin/prog \
+    awak3r/dbms-server:latest /q.sql
+
+
+ОБРАЗ: awak3r/dbms-client
+--------------------------
+
+Содержит один бинарник:
+  /usr/local/bin/dbms_grpc_client  — gRPC клиент
+
+Подключается к серверу по адресу host:port.
+
+Интерактивный режим:
+
+  docker run --rm -it awak3r/dbms-client:latest 192.168.1.10:50051
+
+Пакетный режим со скриптом:
+
+  docker run --rm \
+    -v /path/to/script.sql:/q.sql \
+    awak3r/dbms-client:latest 192.168.1.10:50051 /q.sql
+
+
+ТИПИЧНЫЙ СЦЕНАРИЙ: сервер + клиент на одной машине
+----------------------------------------------------
+
+  # 1. Запустить сервер
+  docker run -d --name dbms -p 50051:50051 -v /tmp/dbdata:/data awak3r/dbms-server:latest
+
+  # 2. Подключиться клиентом (Linux)
+  docker run --rm -it --network host awak3r/dbms-client:latest 127.0.0.1:50051
+
+  # 2. Подключиться клиентом (Mac/Windows)
+  docker run --rm -it awak3r/dbms-client:latest host.docker.internal:50051
+
+
+РАЗМЕРЫ ОБРАЗОВ
+---------------
+  awak3r/dbms-server:latest  ~187MB
+  awak3r/dbms-client:latest  ~179MB
+
+Базовый образ: debian:bookworm-slim.
+gRPC слинкован статически — дополнительных зависимостей нет.

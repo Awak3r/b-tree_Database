@@ -2,6 +2,7 @@
 #define COURSEWORK_DBMS_SQL_EXECUTOR_H
 
 #include <filesystem>
+#include <mutex>
 #include <optional>
 #include <string>
 #include <utility>
@@ -23,9 +24,10 @@ class Executor
 public:
     explicit Executor(Dbms& dbms) : _dbms(dbms), _current_db() {}
 
-    const std::string& current_db() const { return _current_db; }
-    const std::string& last_select_json() const { return _last_select_json; }
-    const std::string& last_error() const { return _last_error; }
+    std::string current_db() const;
+    std::string last_select_json() const;
+    std::string last_error() const;
+    bool last_operation_used_index() const;
 
     bool execute(const Statement& stmt);
 
@@ -34,12 +36,14 @@ private:
     using row_values_type = std::vector<std::optional<std::string>>;
 
     Dbms& _dbms;
+    mutable std::mutex _mutex;
     std::string _current_db;
     std::vector<std::string> _last_select_columns;
     std::vector<row_values_type> _last_select_rows;
     std::string _last_select_json;
     std::vector<std::string> _last_select_column_types;
     mutable std::string _last_error;
+    mutable bool _last_operation_used_index = false;
 
     bool fail(std::string message) const;
     void build_last_select_json();

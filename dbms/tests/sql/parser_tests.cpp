@@ -16,6 +16,8 @@ using dbms::SelectStmt;
 using dbms::Statement;
 using dbms::UpdateStmt;
 using dbms::WhereComparison;
+using dbms::WhereBetween;
+using dbms::WhereLike;
 
 TEST(parserTests, createTable)
 {
@@ -132,6 +134,71 @@ TEST(parserTests, selectWithAliasAndWhereComparison)
     ASSERT_NE(rhs, nullptr);
     EXPECT_FALSE(rhs->is_null);
     EXPECT_EQ(rhs->text, "18");
+}
+
+TEST(parserTests, selectWhereBetween)
+{
+    Lexer lexer("SELECT id FROM users WHERE id BETWEEN 2 AND 4;");
+    Parser parser(lexer.tokenize());
+    Statement stmt = parser.parse_statement();
+    auto* select = std::get_if<SelectStmt>(&stmt);
+    ASSERT_NE(select, nullptr);
+
+    ASSERT_TRUE(select->where.has_value());
+    const auto* where = std::get_if<WhereBetween>(&select->where.value());
+    ASSERT_NE(where, nullptr);
+
+    const auto* value = std::get_if<ColumnRef>(&where->value);
+    ASSERT_NE(value, nullptr);
+    EXPECT_EQ(value->name, "id");
+
+    const auto* low = std::get_if<Literal>(&where->low);
+    ASSERT_NE(low, nullptr);
+    EXPECT_EQ(low->text, "2");
+
+    const auto* high = std::get_if<Literal>(&where->high);
+    ASSERT_NE(high, nullptr);
+    EXPECT_EQ(high->text, "4");
+}
+
+TEST(parserTests, selectWhereLike)
+{
+    Lexer lexer("SELECT name FROM users WHERE name LIKE \"a.*\";");
+    Parser parser(lexer.tokenize());
+    Statement stmt = parser.parse_statement();
+    auto* select = std::get_if<SelectStmt>(&stmt);
+    ASSERT_NE(select, nullptr);
+
+    ASSERT_TRUE(select->where.has_value());
+    const auto* where = std::get_if<WhereLike>(&select->where.value());
+    ASSERT_NE(where, nullptr);
+
+    const auto* value = std::get_if<ColumnRef>(&where->value);
+    ASSERT_NE(value, nullptr);
+    EXPECT_EQ(value->name, "name");
+
+    const auto* pattern = std::get_if<Literal>(&where->pattern);
+    ASSERT_NE(pattern, nullptr);
+    EXPECT_EQ(pattern->text, "a.*");
+}
+
+TEST(parserTests, malformedNamesAreRejected)
+{
+    {
+        Lexer lexer("CREATE DATABASE 1bad;");
+        Parser parser(lexer.tokenize());
+        EXPECT_THROW(parser.parse_statement(), std::runtime_error);
+    }
+    {
+        Lexer lexer("SELECT * FROM db..users;");
+        Parser parser(lexer.tokenize());
+        EXPECT_THROW(parser.parse_statement(), std::runtime_error);
+    }
+    {
+        Lexer lexer("CREATE TABLE users (. INT);");
+        Parser parser(lexer.tokenize());
+        EXPECT_THROW(parser.parse_statement(), std::runtime_error);
+    }
 }
 
 TEST(parserTests, updateWithSetAndWhereComparison)

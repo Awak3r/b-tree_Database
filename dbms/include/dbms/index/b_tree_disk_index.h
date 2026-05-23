@@ -46,35 +46,57 @@ public:
 
     bool insert(const tkey& key, const Rid& rid)
     {
+        _io_ok = true;
         if (_header.root_id < 0) {
             int id = allocate_node(true);
+            if (id < 0) {
+                return false;
+            }
             Node root{};
-            read_node(id, root);
+            if (!read_node(id, root)) {
+                return false;
+            }
             root.keys_count = 1;
             root.keys[0] = key;
             root.values[0] = rid;
-            write_node(root);
+            if (!write_node(root)) {
+                return false;
+            }
             _header.root_id = id;
-            flush_header();
-            return true;
+            return flush_header();
         }
         if (contains(key)) {
             return false;
         }
+        if (!_io_ok) {
+            return false;
+        }
         Node root{};
-        read_node(_header.root_id, root);
+        if (!read_node(_header.root_id, root)) {
+            return false;
+        }
         if (root.keys_count == kMaxKeys) {
             int new_root_id = allocate_node(false);
+            if (new_root_id < 0) {
+                return false;
+            }
             Node new_root{};
-            read_node(new_root_id, new_root);
+            if (!read_node(new_root_id, new_root)) {
+                return false;
+            }
             new_root.children[0] = root.id;
-            split_child(new_root, 0);
-            write_node(new_root);
+            if (!split_child(new_root, 0)) {
+                return false;
+            }
+            if (!write_node(new_root)) {
+                return false;
+            }
             _header.root_id = new_root_id;
-            flush_header();
+            if (!flush_header()) {
+                return false;
+            }
         }
-        insert_non_full(_header.root_id, key, rid);
-        return true;
+        return insert_non_full(_header.root_id, key, rid) && _io_ok;
     }
 
     bool find(const tkey& key, Rid& out_rid) const
@@ -106,6 +128,7 @@ public:
 
     bool erase(const tkey& key)
     {
+        _io_ok = true;
         if (_header.root_id < 0) {
             return false;
         }
@@ -114,10 +137,12 @@ public:
         if (read_node(_header.root_id, root)) {
             if (root.keys_count == 0 && !root.is_leaf) {
                 _header.root_id = root.children[0];
-                flush_header();
+                if (!flush_header()) {
+                    return false;
+                }
             }
         }
-        return removed;
+        return removed && _io_ok;
     }
 
     std::vector<std::pair<tkey, Rid>> range(const tkey& low, const tkey& high) const
@@ -143,19 +168,32 @@ private:
     bool read_node(int id, Node& node) const
     {
         if (id < 0) {
+            _io_ok = false;
             return false;
         }
-        return _pm.read_node(id, node);
+        if (!_pm.read_node(id, node)) {
+            _io_ok = false;
+            return false;
+        }
+        return true;
     }
 
-    void write_node(const Node& node)
+    bool write_node(const Node& node)
     {
-        _pm.write_node(node.id, node);
+        if (!_pm.write_node(node.id, node)) {
+            _io_ok = false;
+            return false;
+        }
+        return true;
     }
 
     int allocate_node(bool is_leaf)
     {
         int id = _pm.allocate_page();
+        if (id < 0) {
+            _io_ok = false;
+            return -1;
+        }
         if (id >= _header.next_page_id) {
             _header.next_page_id = id + 1;
         }
@@ -164,17 +202,25 @@ private:
         node.is_leaf = is_leaf ? 1 : 0;
         node.keys_count = 0;
         node.children.fill(-1);
-        write_node(node);
-        flush_header();
+        if (!write_node(node)) {
+            return -1;
+        }
+        if (!flush_header()) {
+            return -1;
+        }
         return id;
     }
 
-    void flush_header()
+    bool flush_header()
     {
         if (_header.order == 0) {
             _header.order = static_cast<int>(t);
         }
-        _pm.write_header(_header);
+        if (!_pm.write_header(_header)) {
+            _io_ok = false;
+            return false;
+        }
+        return true;
     }
 
     int find_key_index(const Node& node, const tkey& key, bool& found) const
@@ -187,13 +233,20 @@ private:
         return i;
     }
 
-    void split_child(Node& parent, int child_index)
+    bool split_child(Node& parent, int child_index)
     {
         Node full{};
-        read_node(parent.children[child_index], full);
+        if (!read_node(parent.children[child_index], full)) {
+            return false;
+        }
         int right_id = allocate_node(full.is_leaf != 0);
+        if (right_id < 0) {
+            return false;
+        }
         Node right{};
-        read_node(right_id, right);
+        if (!read_node(right_id, right)) {
+            return false;
+        }
         const int middle_index = static_cast<int>(t - 1);
         tkey middle_key = full.keys[middle_index];
         Rid middle_val = full.values[middle_index];
@@ -220,14 +273,15 @@ private:
         parent.values[child_index] = middle_val;
         parent.children[child_index + 1] = right.id;
         parent.keys_count += 1;
-        write_node(full);
-        write_node(right);
+        return write_node(full) && write_node(right);
     }
 
-    void insert_non_full(int node_id, const tkey& key, const Rid& rid)
+    bool insert_non_full(int node_id, const tkey& key, const Rid& rid)
     {
         Node node{};
-        read_node(node_id, node);
+        if (!read_node(node_id, node)) {
+            return false;
+        }
         int i = node.keys_count - 1;
         if (node.is_leaf) {
             while (i >= 0 && key < node.keys[i]) {
@@ -238,32 +292,43 @@ private:
             node.keys[i + 1] = key;
             node.values[i + 1] = rid;
             node.keys_count += 1;
-            write_node(node);
-            return;
+            return write_node(node);
         }
         while (i >= 0 && key < node.keys[i]) {
             --i;
         }
         int child_index = i + 1;
         Node child{};
-        read_node(node.children[child_index], child);
+        if (!read_node(node.children[child_index], child)) {
+            return false;
+        }
         if (child.keys_count == kMaxKeys) {
-            split_child(node, child_index);
-            write_node(node);
+            if (!split_child(node, child_index)) {
+                return false;
+            }
+            if (!write_node(node)) {
+                return false;
+            }
             if (key > node.keys[child_index]) {
                 child_index += 1;
             }
         }
-        write_node(node);
-        insert_non_full(node.children[child_index], key, rid);
+        if (!write_node(node)) {
+            return false;
+        }
+        return insert_non_full(node.children[child_index], key, rid);
     }
 
     Rid get_predecessor(int node_id, int index, tkey& out_key)
     {
         Node cur{};
-        read_node(node_id, cur);
+        if (!read_node(node_id, cur)) {
+            return Rid{-1, -1};
+        }
         while (!cur.is_leaf) {
-            read_node(cur.children[cur.keys_count], cur);
+            if (!read_node(cur.children[cur.keys_count], cur)) {
+                return Rid{-1, -1};
+            }
         }
         out_key = cur.keys[cur.keys_count - 1];
         return cur.values[cur.keys_count - 1];
@@ -272,20 +337,25 @@ private:
     Rid get_successor(int node_id, int index, tkey& out_key)
     {
         Node cur{};
-        read_node(node_id, cur);
+        if (!read_node(node_id, cur)) {
+            return Rid{-1, -1};
+        }
         while (!cur.is_leaf) {
-            read_node(cur.children[0], cur);
+            if (!read_node(cur.children[0], cur)) {
+                return Rid{-1, -1};
+            }
         }
         out_key = cur.keys[0];
         return cur.values[0];
     }
 
-    void merge_children(Node& node, int index)
+    bool merge_children(Node& node, int index)
     {
         Node left{};
         Node right{};
-        read_node(node.children[index], left);
-        read_node(node.children[index + 1], right);
+        if (!read_node(node.children[index], left) || !read_node(node.children[index + 1], right)) {
+            return false;
+        }
         left.keys[left.keys_count] = node.keys[index];
         left.values[left.keys_count] = node.values[index];
         left.keys_count += 1;
@@ -305,14 +375,15 @@ private:
             node.children[i + 1] = node.children[i + 2];
         }
         node.keys_count -= 1;
-        write_node(left);
-        write_node(right);
+        return write_node(left) && write_node(right);
     }
 
     bool erase_internal(int node_id, const tkey& key)
     {
         Node node{};
-        read_node(node_id, node);
+        if (!read_node(node_id, node)) {
+            return false;
+        }
         bool found = false;
         int idx = find_key_index(node, key, found);
         if (found) {
@@ -322,42 +393,60 @@ private:
                     node.values[i] = node.values[i + 1];
                 }
                 node.keys_count -= 1;
-                write_node(node);
-                return true;
+                return write_node(node);
             }
             Node left{};
             Node right{};
-            read_node(node.children[idx], left);
-            read_node(node.children[idx + 1], right);
+            if (!read_node(node.children[idx], left) || !read_node(node.children[idx + 1], right)) {
+                return false;
+            }
             if (left.keys_count >= static_cast<int>(t)) {
                 tkey pred_key{};
                 Rid pred_val = get_predecessor(node.children[idx], idx, pred_key);
+                if (!_io_ok) {
+                    return false;
+                }
                 node.keys[idx] = pred_key;
                 node.values[idx] = pred_val;
-                write_node(node);
+                if (!write_node(node)) {
+                    return false;
+                }
                 return erase_internal(node.children[idx], pred_key);
             }
             if (right.keys_count >= static_cast<int>(t)) {
                 tkey succ_key{};
                 Rid succ_val = get_successor(node.children[idx + 1], idx, succ_key);
+                if (!_io_ok) {
+                    return false;
+                }
                 node.keys[idx] = succ_key;
                 node.values[idx] = succ_val;
-                write_node(node);
+                if (!write_node(node)) {
+                    return false;
+                }
                 return erase_internal(node.children[idx + 1], succ_key);
             }
-            merge_children(node, idx);
-            write_node(node);
+            if (!merge_children(node, idx)) {
+                return false;
+            }
+            if (!write_node(node)) {
+                return false;
+            }
             return erase_internal(node.children[idx], key);
         }
         if (node.is_leaf) {
             return false;
         }
         Node child{};
-        read_node(node.children[idx], child);
+        if (!read_node(node.children[idx], child)) {
+            return false;
+        }
         if (child.keys_count == kMinKeys) {
             if (idx > 0) {
                 Node left{};
-                read_node(node.children[idx - 1], left);
+                if (!read_node(node.children[idx - 1], left)) {
+                    return false;
+                }
                 if (left.keys_count >= static_cast<int>(t)) {
                     for (int i = child.keys_count; i > 0; --i) {
                         child.keys[i] = child.keys[i - 1];
@@ -375,12 +464,14 @@ private:
                     node.values[idx - 1] = left.values[left.keys_count - 1];
                     left.keys_count -= 1;
                     child.keys_count += 1;
-                    write_node(left);
-                    write_node(child);
-                    write_node(node);
+                    if (!write_node(left) || !write_node(child) || !write_node(node)) {
+                        return false;
+                    }
                 } else if (idx + 1 <= node.keys_count) {
                     Node right{};
-                    read_node(node.children[idx + 1], right);
+                    if (!read_node(node.children[idx + 1], right)) {
+                        return false;
+                    }
                     if (right.keys_count >= static_cast<int>(t)) {
                         child.keys[child.keys_count] = node.keys[idx];
                         child.values[child.keys_count] = node.values[idx];
@@ -400,17 +491,20 @@ private:
                             }
                         }
                         right.keys_count -= 1;
-                        write_node(right);
-                        write_node(child);
-                        write_node(node);
+                        if (!write_node(right) || !write_node(child) || !write_node(node)) {
+                            return false;
+                        }
                     } else {
-                        merge_children(node, idx);
-                        write_node(node);
+                        if (!merge_children(node, idx) || !write_node(node)) {
+                            return false;
+                        }
                     }
                 }
             } else if (idx + 1 <= node.keys_count) {
                 Node right{};
-                read_node(node.children[idx + 1], right);
+                if (!read_node(node.children[idx + 1], right)) {
+                    return false;
+                }
                 if (right.keys_count >= static_cast<int>(t)) {
                     child.keys[child.keys_count] = node.keys[idx];
                     child.values[child.keys_count] = node.values[idx];
@@ -430,12 +524,13 @@ private:
                         }
                     }
                     right.keys_count -= 1;
-                    write_node(right);
-                    write_node(child);
-                    write_node(node);
+                    if (!write_node(right) || !write_node(child) || !write_node(node)) {
+                        return false;
+                    }
                 } else {
-                    merge_children(node, idx);
-                    write_node(node);
+                    if (!merge_children(node, idx) || !write_node(node)) {
+                        return false;
+                    }
                 }
             }
         }
@@ -467,6 +562,7 @@ private:
 
     IndexPageManager _pm;
     IndexHeader _header{};
+    mutable bool _io_ok = true;
 };
 
 }

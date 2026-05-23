@@ -267,6 +267,7 @@ TEST(executorTests, selectIndexedIntEqualityAndRange)
     ASSERT_TRUE(run_sql(exec, "INSERT INTO users (id, name) VALUE (3, \"carol\");\n"));
 
     ASSERT_TRUE(run_sql(exec, "SELECT id, name FROM users WHERE id == 2;\n"));
+    EXPECT_TRUE(exec.last_operation_used_index());
     {
         const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
         ASSERT_TRUE(result.is_array());
@@ -276,6 +277,7 @@ TEST(executorTests, selectIndexedIntEqualityAndRange)
     }
 
     ASSERT_TRUE(run_sql(exec, "SELECT id FROM users WHERE id >= 2;\n"));
+    EXPECT_TRUE(exec.last_operation_used_index());
     {
         const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
         ASSERT_TRUE(result.is_array());
@@ -305,6 +307,7 @@ TEST(executorTests, selectIndexedIntWithLiteralOnLeft)
     ASSERT_TRUE(run_sql(exec, "INSERT INTO users (id, name) VALUE (3, \"carol\");\n"));
 
     ASSERT_TRUE(run_sql(exec, "SELECT id FROM users WHERE 2 <= id;\n"));
+    EXPECT_TRUE(exec.last_operation_used_index());
 
     const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
     ASSERT_TRUE(result.is_array());
@@ -317,6 +320,187 @@ TEST(executorTests, selectIndexedIntWithLiteralOnLeft)
     std::sort(ids.begin(), ids.end());
     EXPECT_EQ(ids[0], 2);
     EXPECT_EQ(ids[1], 3);
+}
+
+TEST(executorTests, indexUsageDiagnosticCoversStringAndFallbacks)
+{
+    const std::filesystem::path root = prepare_data_root("index_usage_diagnostic_string_fallbacks");
+    Dbms dbms(root);
+    Executor exec(dbms);
+
+    ASSERT_TRUE(run_sql(exec, "CREATE DATABASE test;\n"));
+    EXPECT_FALSE(exec.last_operation_used_index());
+    ASSERT_TRUE(run_sql(exec, "USE test;\n"));
+    ASSERT_TRUE(run_sql(exec, "CREATE TABLE users (id INT INDEXED, name STRING INDEXED, age INT);\n"));
+    ASSERT_TRUE(run_sql(exec, "INSERT INTO users (id, name, age) VALUE (1, \"alice\", 20), (2, \"bob\", 30), (3, \"carol\", 40);\n"));
+
+    const std::vector<std::string> int_indexed_conditions = {
+        "id == 2",
+        "id < 3",
+        "id <= 2",
+        "id > 1",
+        "id >= 2"
+    };
+    for (const std::string& condition : int_indexed_conditions) {
+        ASSERT_TRUE(run_sql(exec, "SELECT id FROM users WHERE " + condition + ";\n")) << condition;
+        EXPECT_TRUE(exec.last_operation_used_index()) << condition;
+    }
+
+    const std::vector<std::string> string_indexed_conditions = {
+        "name == \"bob\"",
+        "name < \"carol\"",
+        "name <= \"bob\"",
+        "name > \"alice\"",
+        "name >= \"bob\""
+    };
+    for (const std::string& condition : string_indexed_conditions) {
+        ASSERT_TRUE(run_sql(exec, "SELECT name FROM users WHERE " + condition + ";\n")) << condition;
+        EXPECT_TRUE(exec.last_operation_used_index()) << condition;
+    }
+
+    ASSERT_TRUE(run_sql(exec, "SELECT name FROM users WHERE name == \"bob\";\n"));
+    EXPECT_TRUE(exec.last_operation_used_index());
+    {
+        const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+        ASSERT_EQ(result.size(), 1u);
+        EXPECT_EQ(result[0]["name"], "bob");
+    }
+
+    ASSERT_TRUE(run_sql(exec, "SELECT name FROM users WHERE name >= \"bob\";\n"));
+    EXPECT_TRUE(exec.last_operation_used_index());
+    {
+        const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+        ASSERT_EQ(result.size(), 2u);
+    }
+
+    ASSERT_TRUE(run_sql(exec, "SELECT id FROM users WHERE id != 2;\n"));
+    EXPECT_FALSE(exec.last_operation_used_index());
+    {
+        const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+        ASSERT_EQ(result.size(), 2u);
+    }
+
+    ASSERT_TRUE(run_sql(exec, "SELECT id FROM users WHERE age >= 30;\n"));
+    EXPECT_FALSE(exec.last_operation_used_index());
+    {
+        const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+        ASSERT_EQ(result.size(), 2u);
+    }
+
+    ASSERT_TRUE(run_sql(exec, "SELECT id FROM users WHERE id == age;\n"));
+    EXPECT_FALSE(exec.last_operation_used_index());
+}
+
+TEST(executorTests, betweenConditionCoversStringRangeAndTypeErrors)
+{
+    const std::filesystem::path root = prepare_data_root("between_string_range_type_errors");
+    Dbms dbms(root);
+    Executor exec(dbms);
+
+    ASSERT_TRUE(run_sql(exec, "CREATE DATABASE test;\n"));
+    ASSERT_TRUE(run_sql(exec, "USE test;\n"));
+    ASSERT_TRUE(run_sql(exec, "CREATE TABLE users (id INT INDEXED, name STRING INDEXED);\n"));
+    ASSERT_TRUE(run_sql(exec, "INSERT INTO users (id, name) VALUE (1, \"alice\"), (2, \"bob\"), (3, \"carol\"), (4, \"dave\");\n"));
+
+    ASSERT_TRUE(run_sql(exec, "SELECT name FROM users WHERE name BETWEEN \"bob\" AND \"dave\";\n"));
+    EXPECT_TRUE(exec.last_operation_used_index());
+    {
+        const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+        ASSERT_EQ(result.size(), 2u);
+        EXPECT_EQ(result[0]["name"], "bob");
+        EXPECT_EQ(result[1]["name"], "carol");
+    }
+
+    EXPECT_FALSE(run_sql(exec, "SELECT id FROM users WHERE id BETWEEN \"bad\" AND 4;\n"));
+    EXPECT_NE(exec.last_error().find("Type error"), std::string::npos);
+
+    EXPECT_FALSE(run_sql(exec, "SELECT id FROM users WHERE missing BETWEEN 1 AND 3;\n"));
+    EXPECT_NE(exec.last_error().find("Semantic error"), std::string::npos);
+}
+
+TEST(executorTests, betweenUsesIndexForIndexedIntAndFallsBackOtherwise)
+{
+    const std::filesystem::path root = prepare_data_root("between_uses_index_and_fallback");
+    Dbms dbms(root);
+    Executor exec(dbms);
+
+    ASSERT_TRUE(run_sql(exec, "CREATE DATABASE test;\n"));
+    ASSERT_TRUE(run_sql(exec, "USE test;\n"));
+    ASSERT_TRUE(run_sql(exec, "CREATE TABLE users (id INT INDEXED, age INT, name STRING);\n"));
+    ASSERT_TRUE(run_sql(exec, "INSERT INTO users (id, age, name) VALUE (1, 10, \"a\"), (2, 20, \"b\"), (3, 30, \"c\"), (4, 40, \"d\");\n"));
+
+    ASSERT_TRUE(run_sql(exec, "SELECT id FROM users WHERE id BETWEEN 2 AND 4;\n"));
+    EXPECT_TRUE(exec.last_operation_used_index());
+    {
+        const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+        ASSERT_EQ(result.size(), 2u);
+        EXPECT_EQ(result[0]["id"], 2);
+        EXPECT_EQ(result[1]["id"], 3);
+    }
+
+    ASSERT_TRUE(run_sql(exec, "SELECT id FROM users WHERE age BETWEEN 20 AND 40;\n"));
+    EXPECT_FALSE(exec.last_operation_used_index());
+    {
+        const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+        ASSERT_EQ(result.size(), 2u);
+    }
+}
+
+TEST(executorTests, likeConditionCoversEmptyResultAndTypeErrors)
+{
+    const std::filesystem::path root = prepare_data_root("like_empty_result_type_errors");
+    Dbms dbms(root);
+    Executor exec(dbms);
+
+    ASSERT_TRUE(run_sql(exec, "CREATE DATABASE test;\n"));
+    ASSERT_TRUE(run_sql(exec, "USE test;\n"));
+    ASSERT_TRUE(run_sql(exec, "CREATE TABLE users (id INT INDEXED, name STRING, pattern STRING);\n"));
+    ASSERT_TRUE(run_sql(exec, "INSERT INTO users (id, name, pattern) VALUE (1, \"alice\", \"a.*\"), (2, \"bob\", \"b.*\");\n"));
+
+    ASSERT_TRUE(run_sql(exec, "SELECT name FROM users WHERE name LIKE \"z.*\";\n"));
+    {
+        const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+        EXPECT_TRUE(result.empty());
+    }
+
+    ASSERT_TRUE(run_sql(exec, "SELECT name FROM users WHERE name LIKE pattern;\n"));
+    {
+        const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+        ASSERT_EQ(result.size(), 2u);
+    }
+
+    EXPECT_FALSE(run_sql(exec, "SELECT name FROM users WHERE name LIKE \"[\";\n"));
+    EXPECT_NE(exec.last_error().find("invalid LIKE regex"), std::string::npos);
+
+    EXPECT_FALSE(run_sql(exec, "SELECT id FROM users WHERE id LIKE \".*\";\n"));
+    EXPECT_NE(exec.last_error().find("LIKE value"), std::string::npos);
+
+    EXPECT_FALSE(run_sql(exec, "SELECT name FROM users WHERE name LIKE id;\n"));
+    EXPECT_NE(exec.last_error().find("LIKE pattern"), std::string::npos);
+}
+
+TEST(executorTests, indexedStringRejectsValuesLongerThanKeyLimit)
+{
+    const std::filesystem::path root = prepare_data_root("indexed_string_too_long");
+    Dbms dbms(root);
+    Executor exec(dbms);
+    const std::string long_value(241, 'x');
+
+    ASSERT_TRUE(run_sql(exec, "CREATE DATABASE test;\n"));
+    ASSERT_TRUE(run_sql(exec, "USE test;\n"));
+    ASSERT_TRUE(run_sql(exec, "CREATE TABLE tags (id INT INDEXED, name STRING INDEXED);\n"));
+
+    EXPECT_FALSE(run_sql(exec, "INSERT INTO tags (id, name) VALUE (1, \"" + long_value + "\");\n"));
+    EXPECT_NE(exec.last_error().find("too long for the index key"), std::string::npos);
+
+    ASSERT_TRUE(run_sql(exec, "INSERT INTO tags (id, name) VALUE (1, \"short\");\n"));
+    EXPECT_FALSE(run_sql(exec, "UPDATE tags SET name = \"" + long_value + "\" WHERE id == 1;\n"));
+    EXPECT_NE(exec.last_error().find("too long for the index key"), std::string::npos);
+
+    ASSERT_TRUE(run_sql(exec, "SELECT name FROM tags WHERE id == 1;\n"));
+    const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+    ASSERT_EQ(result.size(), 1u);
+    EXPECT_EQ(result[0]["name"], "short");
 }
 
 TEST(executorTests, selectFailsForUnknownProjectionColumn)

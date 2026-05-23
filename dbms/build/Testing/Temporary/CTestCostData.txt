@@ -1,6 +1,6 @@
-b_tree_tests 26 0.000550236
-sql_lexer_tests 29 0.00125447
-sql_cli_tests 17 0.00448148
+b_tree_tests 52 0.000716705
+sql_lexer_tests 55 0.00172064
+sql_cli_tests 43 0.00192784
 tz_point0_tests 0 0
-all_tests 2 0.013575
+all_tests 28 0.00209554
 ---

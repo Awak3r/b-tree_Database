@@ -6,6 +6,7 @@ namespace dbms
 
 SqlResponse SqlApi::execute_sql(const std::string& sql)
 {
+    std::lock_guard<std::mutex> lock(_mutex);
     SqlResponse resp{};
 
     if (sql.find_first_not_of(" \t\r\n") == std::string::npos) {

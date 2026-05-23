@@ -51,7 +51,9 @@ public:
         }
         int id = header.next_page_id;
         header.next_page_id += 1;
-        write_header(header);
+        if (!write_header(header)) {
+            return -1;
+        }
         return id;
     }
 

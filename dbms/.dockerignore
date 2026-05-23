@@ -1,0 +1,4 @@
+*
+!build/prog
+!build/dbms_grpc_server
+!build/dbms_grpc_client
