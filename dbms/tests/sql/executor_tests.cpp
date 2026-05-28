@@ -406,9 +406,10 @@ TEST(executorTests, betweenConditionCoversStringRangeAndTypeErrors)
     EXPECT_TRUE(exec.last_operation_used_index());
     {
         const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
-        ASSERT_EQ(result.size(), 2u);
+        ASSERT_EQ(result.size(), 3u);
         EXPECT_EQ(result[0]["name"], "bob");
         EXPECT_EQ(result[1]["name"], "carol");
+        EXPECT_EQ(result[2]["name"], "dave");
     }
 
     EXPECT_FALSE(run_sql(exec, "SELECT id FROM users WHERE id BETWEEN \"bad\" AND 4;\n"));
@@ -433,16 +434,17 @@ TEST(executorTests, betweenUsesIndexForIndexedIntAndFallsBackOtherwise)
     EXPECT_TRUE(exec.last_operation_used_index());
     {
         const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
-        ASSERT_EQ(result.size(), 2u);
+        ASSERT_EQ(result.size(), 3u);
         EXPECT_EQ(result[0]["id"], 2);
         EXPECT_EQ(result[1]["id"], 3);
+        EXPECT_EQ(result[2]["id"], 4);
     }
 
     ASSERT_TRUE(run_sql(exec, "SELECT id FROM users WHERE age BETWEEN 20 AND 40;\n"));
     EXPECT_FALSE(exec.last_operation_used_index());
     {
         const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
-        ASSERT_EQ(result.size(), 2u);
+        ASSERT_EQ(result.size(), 3u);
     }
 }
 

@@ -1261,7 +1261,7 @@ TEST(tzPoint0Pass, ConditionSupportsLiteralOnEitherSideAndColumnVsColumn)
     }
 }
 
-TEST(tzPoint0SpecGaps, BetweenConditionShouldWorkAsHalfOpenInterval)
+TEST(tzPoint0SpecGaps, BetweenConditionShouldWorkAsClosedInterval)
 {
     dbms::Dbms engine(prepare_data_root("between_condition"));
     dbms::SqlApi api(engine);
@@ -1274,9 +1274,10 @@ TEST(tzPoint0SpecGaps, BetweenConditionShouldWorkAsHalfOpenInterval)
     const dbms::SqlResponse response = run_sql(api, "SELECT id FROM users WHERE id BETWEEN 2 AND 4;");
     ASSERT_TRUE(response.ok) << response.error;
     const nlohmann::json result = nlohmann::json::parse(response.json);
-    ASSERT_EQ(result.size(), 2u);
+    ASSERT_EQ(result.size(), 3u);
     EXPECT_EQ(result[0]["id"], 2);
     EXPECT_EQ(result[1]["id"], 3);
+    EXPECT_EQ(result[2]["id"], 4);
 }
 
 TEST(tzPoint0SpecGaps, LikeConditionShouldSupportRegexPattern)

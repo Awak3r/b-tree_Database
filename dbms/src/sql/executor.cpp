@@ -350,7 +350,7 @@ bool collect_between_rids_from_index(const std::filesystem::path& idx_path,
         IndexManager<int> index(idx_path.string());
         const auto pairs = index.range(low, high);
         for (const auto& entry : pairs) {
-            if (entry.first >= low && entry.first < high) {
+            if (entry.first >= low && entry.first <= high) {
                 out_rids.push_back(entry.second);
             }
         }
@@ -369,7 +369,7 @@ bool collect_between_rids_from_index(const std::filesystem::path& idx_path,
         IndexManager<int> index(idx_path.string());
         const auto pairs = index.range(low, high);
         for (const auto& entry : pairs) {
-            if (entry.first >= low && entry.first < high) {
+            if (entry.first >= low && entry.first <= high) {
                 out_rids.push_back(entry.second);
             }
         }
@@ -387,7 +387,7 @@ bool collect_between_rids_from_index(const std::filesystem::path& idx_path,
         IndexManager<StringIndexKey> index(idx_path.string());
         const auto pairs = index.range(low, high);
         for (const auto& entry : pairs) {
-            if (!(entry.first < low) && entry.first < high) {
+            if (!(entry.first < low) && !(high < entry.first)) {
                 out_rids.push_back(entry.second);
             }
         }
@@ -465,7 +465,7 @@ bool evaluate_where_between(const WhereBetween& where,
                             const std::unordered_map<std::string, std::size_t>& col_pos)
 {
     const WhereComparison lower_bound{where.value, ComparisonOp::ge, where.low};
-    const WhereComparison upper_bound{where.value, ComparisonOp::lt, where.high};
+    const WhereComparison upper_bound{where.value, ComparisonOp::le, where.high};
     return evaluate_where_comparison(lower_bound, row, columns, col_pos) &&
            evaluate_where_comparison(upper_bound, row, columns, col_pos);
 }
@@ -651,7 +651,7 @@ bool validate_where_condition(const WhereCondition& where,
     }
     if (const auto* between = std::get_if<WhereBetween>(&where)) {
         const WhereComparison lower_bound{between->value, ComparisonOp::ge, between->low};
-        const WhereComparison upper_bound{between->value, ComparisonOp::lt, between->high};
+        const WhereComparison upper_bound{between->value, ComparisonOp::le, between->high};
         return validate_comparison_condition(lower_bound, columns, col_pos, error) &&
                validate_comparison_condition(upper_bound, columns, col_pos, error);
     }
