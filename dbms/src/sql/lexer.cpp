@@ -19,7 +19,36 @@ std::vector<Token> Lexer::tokenize()
         }
         char c = _input[_pos];
         if (is_ident_start(c)) {
-            tokens.push_back(read_identifier_or_keyword());
+            Token t = read_identifier_or_keyword();
+            if (t.type == TokenType::identifier) {
+                bool has_lower = false;
+                bool has_upper = false;
+                std::string lower = t.text;
+                for (char& ch : lower) {
+                    if (ch >= 'a' && ch <= 'z') has_lower = true;
+                    if (ch >= 'A' && ch <= 'Z') has_upper = true;
+                    ch = to_lower(ch);
+                }
+                if (lower == "not_null") {
+                    if (has_lower && has_upper) {
+                        throw std::runtime_error("Mixed-case keywords are not allowed");
+                    }
+                    Token a{};
+                    a.type = TokenType::keyword;
+                    a.text = t.text;
+                    a.keyword = Keyword::not_kw;
+                    a.symbol = '\0';
+                    Token b{};
+                    b.type = TokenType::keyword;
+                    b.text = t.text;
+                    b.keyword = Keyword::null_kw;
+                    b.symbol = '\0';
+                    tokens.push_back(a);
+                    tokens.push_back(b);
+                    continue;
+                }
+            }
+            tokens.push_back(t);
             continue;
         }
         if (c >= '0' && c <= '9') {
@@ -275,6 +304,26 @@ bool Lexer::match_keyword(const std::string& text, Keyword& out_kw)
     }
     if (text == "indexed") {
         out_kw = Keyword::indexed_kw;
+        return true;
+    }
+    if (text == "default") {
+        out_kw = Keyword::default_kw;
+        return true;
+    }
+    if (text == "or") {
+        out_kw = Keyword::or_kw;
+        return true;
+    }
+    if (text == "sum") {
+        out_kw = Keyword::sum_kw;
+        return true;
+    }
+    if (text == "count") {
+        out_kw = Keyword::count_kw;
+        return true;
+    }
+    if (text == "avg") {
+        out_kw = Keyword::avg_kw;
         return true;
     }
     return false;

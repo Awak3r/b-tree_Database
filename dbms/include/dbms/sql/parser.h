@@ -52,6 +52,9 @@ private:
     Operand parse_operand();
     ComparisonOp parse_comparison_op();
     WhereCondition parse_select_where();
+    WhereCondition parse_where_or();
+    WhereCondition parse_where_and();
+    WhereCondition parse_where_atom();
 };
 
 }

@@ -61,6 +61,18 @@
 },
 {
   "directory": "/home/study/coursework/dbms/build",
+  "command": "/usr/bin/c++ -DCARES_STATICLIB -I/home/study/coursework/dbms/include -I/home/study/coursework/dbms/build/_deps/nlohmann_json-src/include -I/home/study/coursework/dbms/build/generated -I/home/study/coursework/dbms/build/_deps/grpc-src/third_party/protobuf/src -I/home/study/coursework/dbms/build/_deps/grpc-src/third_party/abseil-cpp -I/home/study/coursework/dbms/build/_deps/grpc-src/include -I/home/study/coursework/dbms/build/_deps/grpc-src/third_party/re2 -I/home/study/coursework/dbms/build/_deps/grpc-build/third_party/cares/cares -I/home/study/coursework/dbms/build/_deps/grpc-src/third_party/cares/cares -I/home/study/coursework/dbms/build/_deps/grpc-src/third_party/cares/cares/include -I/home/study/coursework/dbms/build/_deps/grpc-src/third_party/boringssl-with-bazel/src/include -std=c++20 -o CMakeFiles/dbms_grpc_server.dir/src/grpc/access_logger.cpp.o -c /home/study/coursework/dbms/src/grpc/access_logger.cpp",
+  "file": "/home/study/coursework/dbms/src/grpc/access_logger.cpp",
+  "output": "CMakeFiles/dbms_grpc_server.dir/src/grpc/access_logger.cpp.o"
+},
+{
+  "directory": "/home/study/coursework/dbms/build",
+  "command": "/usr/bin/c++ -DCARES_STATICLIB -I/home/study/coursework/dbms/include -I/home/study/coursework/dbms/build/_deps/nlohmann_json-src/include -I/home/study/coursework/dbms/build/generated -I/home/study/coursework/dbms/build/_deps/grpc-src/third_party/protobuf/src -I/home/study/coursework/dbms/build/_deps/grpc-src/third_party/abseil-cpp -I/home/study/coursework/dbms/build/_deps/grpc-src/include -I/home/study/coursework/dbms/build/_deps/grpc-src/third_party/re2 -I/home/study/coursework/dbms/build/_deps/grpc-build/third_party/cares/cares -I/home/study/coursework/dbms/build/_deps/grpc-src/third_party/cares/cares -I/home/study/coursework/dbms/build/_deps/grpc-src/third_party/cares/cares/include -I/home/study/coursework/dbms/build/_deps/grpc-src/third_party/boringssl-with-bazel/src/include -std=c++20 -o CMakeFiles/dbms_grpc_server.dir/src/grpc/telemetry.cpp.o -c /home/study/coursework/dbms/src/grpc/telemetry.cpp",
+  "file": "/home/study/coursework/dbms/src/grpc/telemetry.cpp",
+  "output": "CMakeFiles/dbms_grpc_server.dir/src/grpc/telemetry.cpp.o"
+},
+{
+  "directory": "/home/study/coursework/dbms/build",
   "command": "/usr/bin/c++ -DCARES_STATICLIB -I/home/study/coursework/dbms/include -I/home/study/coursework/dbms/build/_deps/nlohmann_json-src/include -I/home/study/coursework/dbms/build/generated -I/home/study/coursework/dbms/build/_deps/grpc-src/third_party/protobuf/src -I/home/study/coursework/dbms/build/_deps/grpc-src/third_party/abseil-cpp -I/home/study/coursework/dbms/build/_deps/grpc-src/include -I/home/study/coursework/dbms/build/_deps/grpc-src/third_party/re2 -I/home/study/coursework/dbms/build/_deps/grpc-build/third_party/cares/cares -I/home/study/coursework/dbms/build/_deps/grpc-src/third_party/cares/cares -I/home/study/coursework/dbms/build/_deps/grpc-src/third_party/cares/cares/include -I/home/study/coursework/dbms/build/_deps/grpc-src/third_party/boringssl-with-bazel/src/include -std=c++20 -o CMakeFiles/dbms_grpc_server.dir/src/sql/lexer.cpp.o -c /home/study/coursework/dbms/src/sql/lexer.cpp",
   "file": "/home/study/coursework/dbms/src/sql/lexer.cpp",
   "output": "CMakeFiles/dbms_grpc_server.dir/src/sql/lexer.cpp.o"

@@ -2813,6 +2813,30 @@ generated/sql_service.pb.cc.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_grpc_proto.dir/build.make CMakeFiles/dbms_grpc_proto.dir/generated/sql_service.pb.cc.s
 .PHONY : generated/sql_service.pb.cc.s
 
+src/grpc/access_logger.o: src/grpc/access_logger.cpp.o
+.PHONY : src/grpc/access_logger.o
+
+# target to build an object file
+src/grpc/access_logger.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_grpc_server.dir/build.make CMakeFiles/dbms_grpc_server.dir/src/grpc/access_logger.cpp.o
+.PHONY : src/grpc/access_logger.cpp.o
+
+src/grpc/access_logger.i: src/grpc/access_logger.cpp.i
+.PHONY : src/grpc/access_logger.i
+
+# target to preprocess a source file
+src/grpc/access_logger.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_grpc_server.dir/build.make CMakeFiles/dbms_grpc_server.dir/src/grpc/access_logger.cpp.i
+.PHONY : src/grpc/access_logger.cpp.i
+
+src/grpc/access_logger.s: src/grpc/access_logger.cpp.s
+.PHONY : src/grpc/access_logger.s
+
+# target to generate assembly for a file
+src/grpc/access_logger.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_grpc_server.dir/build.make CMakeFiles/dbms_grpc_server.dir/src/grpc/access_logger.cpp.s
+.PHONY : src/grpc/access_logger.cpp.s
+
 src/grpc/grpc_client_main.o: src/grpc/grpc_client_main.cpp.o
 .PHONY : src/grpc/grpc_client_main.o
 
@@ -2884,6 +2908,30 @@ src/grpc/sql_service_impl.s: src/grpc/sql_service_impl.cpp.s
 src/grpc/sql_service_impl.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_grpc_server.dir/build.make CMakeFiles/dbms_grpc_server.dir/src/grpc/sql_service_impl.cpp.s
 .PHONY : src/grpc/sql_service_impl.cpp.s
+
+src/grpc/telemetry.o: src/grpc/telemetry.cpp.o
+.PHONY : src/grpc/telemetry.o
+
+# target to build an object file
+src/grpc/telemetry.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_grpc_server.dir/build.make CMakeFiles/dbms_grpc_server.dir/src/grpc/telemetry.cpp.o
+.PHONY : src/grpc/telemetry.cpp.o
+
+src/grpc/telemetry.i: src/grpc/telemetry.cpp.i
+.PHONY : src/grpc/telemetry.i
+
+# target to preprocess a source file
+src/grpc/telemetry.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_grpc_server.dir/build.make CMakeFiles/dbms_grpc_server.dir/src/grpc/telemetry.cpp.i
+.PHONY : src/grpc/telemetry.cpp.i
+
+src/grpc/telemetry.s: src/grpc/telemetry.cpp.s
+.PHONY : src/grpc/telemetry.s
+
+# target to generate assembly for a file
+src/grpc/telemetry.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbms_grpc_server.dir/build.make CMakeFiles/dbms_grpc_server.dir/src/grpc/telemetry.cpp.s
+.PHONY : src/grpc/telemetry.cpp.s
 
 src/main.o: src/main.cpp.o
 .PHONY : src/main.o
@@ -3443,6 +3491,9 @@ help:
 	@echo "... generated/sql_service.pb.o"
 	@echo "... generated/sql_service.pb.i"
 	@echo "... generated/sql_service.pb.s"
+	@echo "... src/grpc/access_logger.o"
+	@echo "... src/grpc/access_logger.i"
+	@echo "... src/grpc/access_logger.s"
 	@echo "... src/grpc/grpc_client_main.o"
 	@echo "... src/grpc/grpc_client_main.i"
 	@echo "... src/grpc/grpc_client_main.s"
@@ -3452,6 +3503,9 @@ help:
 	@echo "... src/grpc/sql_service_impl.o"
 	@echo "... src/grpc/sql_service_impl.i"
 	@echo "... src/grpc/sql_service_impl.s"
+	@echo "... src/grpc/telemetry.o"
+	@echo "... src/grpc/telemetry.i"
+	@echo "... src/grpc/telemetry.s"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"

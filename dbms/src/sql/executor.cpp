@@ -3,6 +3,7 @@
 #include <nlohmann/json.hpp>
 #include <algorithm>
 #include <charconv>
+#include <sstream>
 #include <filesystem>
 #include <limits>
 #include <regex>
@@ -502,6 +503,14 @@ bool evaluate_where_condition(const WhereCondition& where,
     if (const auto* like = std::get_if<WhereLike>(&where)) {
         return evaluate_where_like(*like, row, columns, col_pos);
     }
+    if (const auto* and_node = std::get_if<std::unique_ptr<WhereAnd>>(&where)) {
+        return evaluate_where_condition((*and_node)->left, row, columns, col_pos)
+            && evaluate_where_condition((*and_node)->right, row, columns, col_pos);
+    }
+    if (const auto* or_node = std::get_if<std::unique_ptr<WhereOr>>(&where)) {
+        return evaluate_where_condition((*or_node)->left, row, columns, col_pos)
+            || evaluate_where_condition((*or_node)->right, row, columns, col_pos);
+    }
     return false;
 }
 
@@ -648,6 +657,14 @@ bool validate_where_condition(const WhereCondition& where,
     }
     if (const auto* like = std::get_if<WhereLike>(&where)) {
         return validate_like_condition(*like, columns, col_pos, error);
+    }
+    if (const auto* and_node = std::get_if<std::unique_ptr<WhereAnd>>(&where)) {
+        return validate_where_condition((*and_node)->left, columns, col_pos, error)
+            && validate_where_condition((*and_node)->right, columns, col_pos, error);
+    }
+    if (const auto* or_node = std::get_if<std::unique_ptr<WhereOr>>(&where)) {
+        return validate_where_condition((*or_node)->left, columns, col_pos, error)
+            && validate_where_condition((*or_node)->right, columns, col_pos, error);
     }
     error = "Semantic error: unsupported WHERE condition";
     return false;
@@ -1133,6 +1150,7 @@ bool Executor::execute_create_table(const CreateTableStmt& stmt)
         c.type = col.type;
         c.not_null = col.not_null;
         c.indexed = col.indexed;
+        c.default_value = col.default_value;
         columns.push_back(std::move(c));
     }
     std::error_code ec;
@@ -1299,6 +1317,10 @@ bool Executor::normalize_insert_row(const Table& table,
 
     for (std::size_t i = 0; i < table_columns.size(); ++i) {
         if (assigned[i]) {
+            continue;
+        }
+        if (table_columns[i].default_value.has_value()) {
+            out_row[i] = table_columns[i].default_value;
             continue;
         }
         if (table_columns[i].not_null || table_columns[i].indexed) {
@@ -1688,24 +1710,31 @@ bool Executor::execute_select(const SelectStmt& stmt)
         col_pos[columns[i].name] = i;
     }
 
+    // проверяем есть ли агрегаты в проекции
+    const bool has_aggregates = !stmt.projection.is_star &&
+        std::any_of(stmt.projection.items.begin(), stmt.projection.items.end(),
+                    [](const SelectItem& it) { return it.aggregate.has_value(); });
+
     std::vector<std::size_t> selected_idx;
-    if (stmt.projection.is_star) {
-        for (std::size_t i = 0; i < columns.size(); ++i) {
-            selected_idx.push_back(i);
-            _last_select_columns.push_back(columns[i].name);
-            _last_select_column_types.push_back(columns[i].type);
-        }
-    } else {
-        for (const auto& item : stmt.projection.items) {
-            auto it = col_pos.find(item.column_name);
-            if (it == col_pos.end()) {
-                return fail("Semantic error: table `" + resolved->db_name + "." + resolved->table_name +
-                            "` has no column `" + item.column_name + "` in SELECT projection");
+    if (!has_aggregates) {
+        if (stmt.projection.is_star) {
+            for (std::size_t i = 0; i < columns.size(); ++i) {
+                selected_idx.push_back(i);
+                _last_select_columns.push_back(columns[i].name);
+                _last_select_column_types.push_back(columns[i].type);
             }
-            const std::size_t column_idx = it->second;
-            selected_idx.push_back(column_idx);
-            _last_select_columns.push_back(item.alias.has_value() ? item.alias.value() : item.column_name);
-            _last_select_column_types.push_back(columns[column_idx].type);
+        } else {
+            for (const auto& item : stmt.projection.items) {
+                auto it = col_pos.find(item.column_name);
+                if (it == col_pos.end()) {
+                    return fail("Semantic error: table `" + resolved->db_name + "." + resolved->table_name +
+                                "` has no column `" + item.column_name + "` in SELECT projection");
+                }
+                const std::size_t column_idx = it->second;
+                selected_idx.push_back(column_idx);
+                _last_select_columns.push_back(item.alias.has_value() ? item.alias.value() : item.column_name);
+                _last_select_column_types.push_back(columns[column_idx].type);
+            }
         }
     }
 
@@ -1714,6 +1743,68 @@ bool Executor::execute_select(const SelectStmt& stmt)
         return fail(_last_error.empty()
             ? "Runtime error: cannot read matching rows from `" + resolved->db_name + "." + table->name() + "`"
             : _last_error);
+    }
+
+    if (has_aggregates) {
+        row_values_type agg_row;
+        for (const auto& item : stmt.projection.items) {
+            auto it = col_pos.find(item.column_name);
+            if (it == col_pos.end()) {
+                return fail("Semantic error: table `" + resolved->db_name + "." + resolved->table_name +
+                            "` has no column `" + item.column_name + "` in aggregate");
+            }
+            const std::size_t cidx = it->second;
+            const AggregateFunc func = item.aggregate.value();
+
+            long long sum_val = 0;
+            long long count_val = 0;
+
+            for (const auto& matched : matched_rows) {
+                const auto& cell = matched.second[cidx];
+                if (!cell.has_value()) {
+                    continue;
+                }
+                count_val++;
+                if (func == AggregateFunc::sum || func == AggregateFunc::avg) {
+                    int parsed = 0;
+                    if (parse_int_strict(cell.value(), parsed)) {
+                        sum_val += parsed;
+                    }
+                }
+            }
+
+            std::string result;
+            if (func == AggregateFunc::count) {
+                result = std::to_string(count_val);
+            } else if (func == AggregateFunc::sum) {
+                result = std::to_string(sum_val);
+            } else { // avg
+                if (count_val == 0) {
+                    agg_row.push_back(std::nullopt);
+                    const std::string col_name = item.alias.has_value() ? item.alias.value()
+                        : ("AVG(" + item.column_name + ")");
+                    _last_select_columns.push_back(col_name);
+                    _last_select_column_types.push_back("STRING");
+                    continue;
+                }
+                const double avg_val = static_cast<double>(sum_val) / static_cast<double>(count_val);
+                std::ostringstream oss;
+                oss << std::fixed;
+                oss.precision(2);
+                oss << avg_val;
+                result = oss.str();
+            }
+
+            agg_row.push_back(result);
+            const std::string col_name = item.alias.has_value() ? item.alias.value()
+                : ((func == AggregateFunc::sum ? "SUM(" :
+                    func == AggregateFunc::count ? "COUNT(" : "AVG(") + item.column_name + ")");
+            _last_select_columns.push_back(col_name);
+            _last_select_column_types.push_back("STRING");
+        }
+        _last_select_rows.push_back(std::move(agg_row));
+        build_last_select_json();
+        return true;
     }
 
     _last_select_rows.reserve(matched_rows.size());

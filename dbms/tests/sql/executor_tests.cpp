@@ -824,6 +824,368 @@ TEST(executorTests, deleteWithoutWhereClearsAllIndexedKeys)
     ASSERT_EQ(result.size(), 2u);
 }
 
+// ============ AND / OR / скобки ============
+
+TEST(executorTests, selectWhereAndFiltersRows)
+{
+    const std::filesystem::path root = prepare_data_root("select_where_and_filters");
+    Dbms dbms(root);
+    Executor exec(dbms);
+
+    ASSERT_TRUE(run_sql(exec, "CREATE DATABASE test;"));
+    ASSERT_TRUE(run_sql(exec, "USE test;"));
+    ASSERT_TRUE(run_sql(exec, "CREATE TABLE users (id INT, name STRING, age INT);"));
+    ASSERT_TRUE(run_sql(exec, "INSERT INTO users (id, name, age) VALUE (1, \"alice\", 20), (2, \"bob\", 25), (3, \"alice\", 30);"));
+
+    // name == "alice" AND age >= 25  ->  только id=3
+    ASSERT_TRUE(run_sql(exec, "SELECT id FROM users WHERE name == \"alice\" AND age >= 25;"));
+    const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+    ASSERT_EQ(result.size(), 1u);
+    EXPECT_EQ(result[0]["id"], 3);
+}
+
+TEST(executorTests, selectWhereOrFiltersRows)
+{
+    const std::filesystem::path root = prepare_data_root("select_where_or_filters");
+    Dbms dbms(root);
+    Executor exec(dbms);
+
+    ASSERT_TRUE(run_sql(exec, "CREATE DATABASE test;"));
+    ASSERT_TRUE(run_sql(exec, "USE test;"));
+    ASSERT_TRUE(run_sql(exec, "CREATE TABLE users (id INT, name STRING, age INT);"));
+    ASSERT_TRUE(run_sql(exec, "INSERT INTO users (id, name, age) VALUE (1, \"alice\", 20), (2, \"bob\", 25), (3, \"carol\", 30);"));
+
+    // name == "alice" OR name == "carol"  ->  id=1 и id=3
+    ASSERT_TRUE(run_sql(exec, "SELECT id FROM users WHERE name == \"alice\" OR name == \"carol\";"));
+    const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+    ASSERT_EQ(result.size(), 2u);
+    std::vector<int> ids;
+    for (const auto& row : result) ids.push_back(row["id"].get<int>());
+    std::sort(ids.begin(), ids.end());
+    EXPECT_EQ(ids[0], 1);
+    EXPECT_EQ(ids[1], 3);
+}
+
+// AND имеет более высокий приоритет:
+// a == 1 OR b == 20 AND c == 30  =>  a==1 OR (b==20 AND c==30)
+TEST(executorTests, selectWhereAndPrecedenceOverOr)
+{
+    const std::filesystem::path root = prepare_data_root("select_and_precedence_or");
+    Dbms dbms(root);
+    Executor exec(dbms);
+
+    ASSERT_TRUE(run_sql(exec, "CREATE DATABASE test;"));
+    ASSERT_TRUE(run_sql(exec, "USE test;"));
+    ASSERT_TRUE(run_sql(exec, "CREATE TABLE t (a INT, b INT, c INT);"));
+    // строка 1: a==1 => попадает по левой части OR
+    // строка 2: b==20 AND c==30 => попадает по правой части OR
+    // строка 3: никаких совпадений
+    ASSERT_TRUE(run_sql(exec, "INSERT INTO t (a, b, c) VALUE (1, 0, 0), (0, 20, 30), (0, 0, 0);"));
+
+    ASSERT_TRUE(run_sql(exec, "SELECT a, b, c FROM t WHERE a == 1 OR b == 20 AND c == 30;"));
+    const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+    ASSERT_EQ(result.size(), 2u);
+}
+
+// Скобки переопределяют приоритет:
+// (a == 1 OR b == 20) AND c == 3
+TEST(executorTests, selectWhereParenthesesOverridePrecedence)
+{
+    const std::filesystem::path root = prepare_data_root("select_parentheses_precedence");
+    Dbms dbms(root);
+    Executor exec(dbms);
+
+    ASSERT_TRUE(run_sql(exec, "CREATE DATABASE test;"));
+    ASSERT_TRUE(run_sql(exec, "USE test;"));
+    ASSERT_TRUE(run_sql(exec, "CREATE TABLE t (a INT, b INT, c INT);"));
+    // строка 1: (a==1 OR false) AND c==3  => true AND true => match
+    // строка 2: (a==1 OR b==20) AND c==99 => true AND false => no
+    // строка 3: (false OR b==20) AND c==3 => true AND false => no (c!=3)
+    ASSERT_TRUE(run_sql(exec, "INSERT INTO t (a, b, c) VALUE (1, 0, 3), (1, 20, 99), (0, 20, 0);"));
+
+    ASSERT_TRUE(run_sql(exec, "SELECT a, b, c FROM t WHERE (a == 1 OR b == 20) AND c == 3;"));
+    const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+    ASSERT_EQ(result.size(), 1u);
+    EXPECT_EQ(result[0]["a"], 1);
+    EXPECT_EQ(result[0]["b"], 0);
+    EXPECT_EQ(result[0]["c"], 3);
+}
+
+TEST(executorTests, selectWhereAndBothFalseReturnsEmpty)
+{
+    const std::filesystem::path root = prepare_data_root("select_and_both_false_empty");
+    Dbms dbms(root);
+    Executor exec(dbms);
+
+    ASSERT_TRUE(run_sql(exec, "CREATE DATABASE test;"));
+    ASSERT_TRUE(run_sql(exec, "USE test;"));
+    ASSERT_TRUE(run_sql(exec, "CREATE TABLE users (id INT, name STRING);"));
+    ASSERT_TRUE(run_sql(exec, "INSERT INTO users (id, name) VALUE (1, \"alice\"), (2, \"bob\");"));
+
+    // одна строка не может одновременно иметь id==1 и id==2
+    ASSERT_TRUE(run_sql(exec, "SELECT id FROM users WHERE id == 1 AND id == 2;"));
+    const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+    ASSERT_EQ(result.size(), 0u);
+}
+
+TEST(executorTests, selectWhereOrAllFalseReturnsEmpty)
+{
+    const std::filesystem::path root = prepare_data_root("select_or_all_false_empty");
+    Dbms dbms(root);
+    Executor exec(dbms);
+
+    ASSERT_TRUE(run_sql(exec, "CREATE DATABASE test;"));
+    ASSERT_TRUE(run_sql(exec, "USE test;"));
+    ASSERT_TRUE(run_sql(exec, "CREATE TABLE users (id INT, name STRING);"));
+    ASSERT_TRUE(run_sql(exec, "INSERT INTO users (id, name) VALUE (1, \"alice\"), (2, \"bob\");"));
+
+    ASSERT_TRUE(run_sql(exec, "SELECT id FROM users WHERE id == 99 OR id == 100;"));
+    const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+    ASSERT_EQ(result.size(), 0u);
+}
+
+TEST(executorTests, updateWhereAndOnlyMatchingRows)
+{
+    const std::filesystem::path root = prepare_data_root("update_where_and_matching");
+    Dbms dbms(root);
+    Executor exec(dbms);
+
+    ASSERT_TRUE(run_sql(exec, "CREATE DATABASE test;"));
+    ASSERT_TRUE(run_sql(exec, "USE test;"));
+    ASSERT_TRUE(run_sql(exec, "CREATE TABLE users (id INT, name STRING, age INT);"));
+    ASSERT_TRUE(run_sql(exec, "INSERT INTO users (id, name, age) VALUE (1, \"alice\", 20), (2, \"alice\", 25), (3, \"bob\", 20);"));
+
+    // обновить только alice с age==20 (не alice-25, не bob)
+    ASSERT_TRUE(run_sql(exec, "UPDATE users SET age = 99 WHERE name == \"alice\" AND age == 20;"));
+    ASSERT_TRUE(run_sql(exec, "SELECT id, age FROM users WHERE age == 99;"));
+    const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+    ASSERT_EQ(result.size(), 1u);
+    EXPECT_EQ(result[0]["id"], 1);
+    EXPECT_EQ(result[0]["age"], 99);
+}
+
+TEST(executorTests, deleteWhereOrRemovesMatchingRows)
+{
+    const std::filesystem::path root = prepare_data_root("delete_where_or_removes");
+    Dbms dbms(root);
+    Executor exec(dbms);
+
+    ASSERT_TRUE(run_sql(exec, "CREATE DATABASE test;"));
+    ASSERT_TRUE(run_sql(exec, "USE test;"));
+    ASSERT_TRUE(run_sql(exec, "CREATE TABLE users (id INT, name STRING);"));
+    ASSERT_TRUE(run_sql(exec, "INSERT INTO users (id, name) VALUE (1, \"alice\"), (2, \"bob\"), (3, \"carol\");"));
+
+    ASSERT_TRUE(run_sql(exec, "DELETE FROM users WHERE id == 1 OR id == 3;"));
+    ASSERT_TRUE(run_sql(exec, "SELECT * FROM users;"));
+    const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+    ASSERT_EQ(result.size(), 1u);
+    EXPECT_EQ(result[0]["id"], 2);
+    EXPECT_EQ(result[0]["name"], "bob");
+}
+
+TEST(executorTests, whereAndWithUnknownColumnFails)
+{
+    const std::filesystem::path root = prepare_data_root("where_and_unknown_column");
+    Dbms dbms(root);
+    Executor exec(dbms);
+
+    ASSERT_TRUE(run_sql(exec, "CREATE DATABASE test;"));
+    ASSERT_TRUE(run_sql(exec, "USE test;"));
+    ASSERT_TRUE(run_sql(exec, "CREATE TABLE users (id INT, name STRING);"));
+    ASSERT_TRUE(run_sql(exec, "INSERT INTO users (id, name) VALUE (1, \"alice\");"));
+
+    // missing_column не существует — семантическая ошибка
+    EXPECT_FALSE(run_sql(exec, "SELECT id FROM users WHERE id == 1 AND missing == 2;"));
+    EXPECT_NE(exec.last_error().find("Semantic error"), std::string::npos);
+}
+
+TEST(executorTests, whereOrWithUnknownColumnFails)
+{
+    const std::filesystem::path root = prepare_data_root("where_or_unknown_column");
+    Dbms dbms(root);
+    Executor exec(dbms);
+
+    ASSERT_TRUE(run_sql(exec, "CREATE DATABASE test;"));
+    ASSERT_TRUE(run_sql(exec, "USE test;"));
+    ASSERT_TRUE(run_sql(exec, "CREATE TABLE users (id INT, name STRING);"));
+    ASSERT_TRUE(run_sql(exec, "INSERT INTO users (id, name) VALUE (1, \"alice\");"));
+
+    EXPECT_FALSE(run_sql(exec, "SELECT id FROM users WHERE id == 1 OR missing == 2;"));
+    EXPECT_NE(exec.last_error().find("Semantic error"), std::string::npos);
+}
+
+TEST(executorTests, selectWhereComplexNestedCondition)
+{
+    const std::filesystem::path root = prepare_data_root("select_complex_nested");
+    Dbms dbms(root);
+    Executor exec(dbms);
+
+    ASSERT_TRUE(run_sql(exec, "CREATE DATABASE test;"));
+    ASSERT_TRUE(run_sql(exec, "USE test;"));
+    ASSERT_TRUE(run_sql(exec, "CREATE TABLE t (id INT, cat STRING, score INT);"));
+    ASSERT_TRUE(run_sql(exec, "INSERT INTO t (id, cat, score) VALUE "
+                              "(1, \"a\", 10), (2, \"a\", 50), "
+                              "(3, \"b\", 10), (4, \"b\", 50), "
+                              "(5, \"c\", 99);"));
+
+    // (cat == "a" AND score >= 50) OR (cat == "b" AND score < 20)
+    // => id=2 (a,50) и id=3 (b,10)
+    ASSERT_TRUE(run_sql(exec, "SELECT id FROM t WHERE "
+                              "(cat == \"a\" AND score >= 50) OR "
+                              "(cat == \"b\" AND score < 20);"));
+    const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+    ASSERT_EQ(result.size(), 2u);
+    std::vector<int> ids;
+    for (const auto& row : result) ids.push_back(row["id"].get<int>());
+    std::sort(ids.begin(), ids.end());
+    EXPECT_EQ(ids[0], 2);
+    EXPECT_EQ(ids[1], 3);
+}
+
+TEST(executorTests, aggregateSumCountAvg)
+{
+    const std::filesystem::path root = prepare_data_root("aggregate_sum_count_avg");
+    Dbms dbms(root);
+    Executor exec(dbms);
+
+    ASSERT_TRUE(run_sql(exec, "CREATE DATABASE test;"));
+    ASSERT_TRUE(run_sql(exec, "USE test;"));
+    ASSERT_TRUE(run_sql(exec, "CREATE TABLE items (id INT INDEXED, name STRING, price INT NOT NULL);"));
+    ASSERT_TRUE(run_sql(exec, "INSERT INTO items (id, name, price) VALUE (1, \"a\", 10), (2, \"b\", 20), (3, NULL, 30);"));
+
+    ASSERT_TRUE(run_sql(exec, "SELECT COUNT(id) FROM items;"));
+    {
+        const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+        ASSERT_EQ(result.size(), 1u);
+        EXPECT_EQ(result[0]["COUNT(id)"], "3");
+    }
+
+    ASSERT_TRUE(run_sql(exec, "SELECT SUM(price) FROM items;"));
+    {
+        const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+        ASSERT_EQ(result.size(), 1u);
+        EXPECT_EQ(result[0]["SUM(price)"], "60");
+    }
+
+    ASSERT_TRUE(run_sql(exec, "SELECT AVG(price) FROM items;"));
+    {
+        const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+        ASSERT_EQ(result.size(), 1u);
+        EXPECT_EQ(result[0]["AVG(price)"], "20.00");
+    }
+
+    // COUNT на nullable колонке считает только не-NULL значения
+    ASSERT_TRUE(run_sql(exec, "SELECT COUNT(name) FROM items;"));
+    {
+        const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+        ASSERT_EQ(result.size(), 1u);
+        EXPECT_EQ(result[0]["COUNT(name)"], "2");
+    }
+}
+
+TEST(executorTests, aggregateWithWhereFilter)
+{
+    const std::filesystem::path root = prepare_data_root("aggregate_with_where_filter");
+    Dbms dbms(root);
+    Executor exec(dbms);
+
+    ASSERT_TRUE(run_sql(exec, "CREATE DATABASE test;"));
+    ASSERT_TRUE(run_sql(exec, "USE test;"));
+    ASSERT_TRUE(run_sql(exec, "CREATE TABLE sales (id INT INDEXED, amount INT NOT NULL);"));
+    ASSERT_TRUE(run_sql(exec, "INSERT INTO sales (id, amount) VALUE (1, 100), (2, 200), (3, 300), (4, 400);"));
+
+    ASSERT_TRUE(run_sql(exec, "SELECT COUNT(id) FROM sales WHERE amount >= 300;"));
+    {
+        const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+        ASSERT_EQ(result.size(), 1u);
+        EXPECT_EQ(result[0]["COUNT(id)"], "2");
+    }
+
+    ASSERT_TRUE(run_sql(exec, "SELECT SUM(amount) FROM sales WHERE id <= 2;"));
+    {
+        const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+        ASSERT_EQ(result.size(), 1u);
+        EXPECT_EQ(result[0]["SUM(amount)"], "300");
+    }
+}
+
+TEST(executorTests, aggregateOnEmptyResultSet)
+{
+    const std::filesystem::path root = prepare_data_root("aggregate_empty_result_set");
+    Dbms dbms(root);
+    Executor exec(dbms);
+
+    ASSERT_TRUE(run_sql(exec, "CREATE DATABASE test;"));
+    ASSERT_TRUE(run_sql(exec, "USE test;"));
+    ASSERT_TRUE(run_sql(exec, "CREATE TABLE items (id INT INDEXED, price INT NOT NULL);"));
+    ASSERT_TRUE(run_sql(exec, "INSERT INTO items (id, price) VALUE (1, 10), (2, 20);"));
+
+    ASSERT_TRUE(run_sql(exec, "SELECT COUNT(id) FROM items WHERE price > 1000;"));
+    {
+        const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+        ASSERT_EQ(result.size(), 1u);
+        EXPECT_EQ(result[0]["COUNT(id)"], "0");
+    }
+
+    ASSERT_TRUE(run_sql(exec, "SELECT SUM(price) FROM items WHERE price > 1000;"));
+    {
+        const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+        ASSERT_EQ(result.size(), 1u);
+        EXPECT_EQ(result[0]["SUM(price)"], "0");
+    }
+
+    ASSERT_TRUE(run_sql(exec, "SELECT AVG(price) FROM items WHERE price > 1000;"));
+    {
+        const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+        ASSERT_EQ(result.size(), 1u);
+        EXPECT_TRUE(result[0]["AVG(price)"].is_null());
+    }
+}
+
+TEST(executorTests, aggregateAliasRenamesColumn)
+{
+    const std::filesystem::path root = prepare_data_root("aggregate_alias_renames_column");
+    Dbms dbms(root);
+    Executor exec(dbms);
+
+    ASSERT_TRUE(run_sql(exec, "CREATE DATABASE test;"));
+    ASSERT_TRUE(run_sql(exec, "USE test;"));
+    ASSERT_TRUE(run_sql(exec, "CREATE TABLE nums (id INT INDEXED, val INT NOT NULL);"));
+    ASSERT_TRUE(run_sql(exec, "INSERT INTO nums (id, val) VALUE (1, 5), (2, 15), (3, 30);"));
+
+    ASSERT_TRUE(run_sql(exec, "SELECT SUM(val) AS total FROM nums;"));
+    {
+        const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+        ASSERT_EQ(result.size(), 1u);
+        EXPECT_TRUE(result[0].contains("total"));
+        EXPECT_FALSE(result[0].contains("SUM(val)"));
+        EXPECT_EQ(result[0]["total"], "50");
+    }
+
+    ASSERT_TRUE(run_sql(exec, "SELECT AVG(val) AS mean FROM nums;"));
+    {
+        const nlohmann::json result = nlohmann::json::parse(exec.last_select_json());
+        ASSERT_EQ(result.size(), 1u);
+        EXPECT_TRUE(result[0].contains("mean"));
+        EXPECT_EQ(result[0]["mean"], "16.67");
+    }
+}
+
+TEST(executorTests, aggregateUnknownColumnFails)
+{
+    const std::filesystem::path root = prepare_data_root("aggregate_unknown_column_fails");
+    Dbms dbms(root);
+    Executor exec(dbms);
+
+    ASSERT_TRUE(run_sql(exec, "CREATE DATABASE test;"));
+    ASSERT_TRUE(run_sql(exec, "USE test;"));
+    ASSERT_TRUE(run_sql(exec, "CREATE TABLE t (id INT INDEXED);"));
+    ASSERT_TRUE(run_sql(exec, "INSERT INTO t (id) VALUE (1);"));
+
+    EXPECT_FALSE(run_sql(exec, "SELECT SUM(nonexistent) FROM t;"));
+    EXPECT_FALSE(run_sql(exec, "SELECT COUNT(bad_col) FROM t;"));
+}
+
 int main(int argc, char** argv)
 {
     ::testing::InitGoogleTest(&argc, argv);

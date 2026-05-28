@@ -1,6 +1,7 @@
 #ifndef COURSEWORK_DBMS_SQL_AST_H
 #define COURSEWORK_DBMS_SQL_AST_H
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <variant>
@@ -30,6 +31,7 @@ struct ColumnDef
     std::string type;
     bool not_null;
     bool indexed;
+    std::optional<std::string> default_value;
 };
 
 struct CreateTableStmt
@@ -58,10 +60,13 @@ struct InsertStmt
 
 // ---------- SELECT AST ----------
 
+enum class AggregateFunc { sum, count, avg };
+
 struct SelectItem
 {
     std::string column_name;
-    std::optional<std::string> alias; // SELECT id AS user_id
+    std::optional<std::string> alias;
+    std::optional<AggregateFunc> aggregate; // nullopt = обычная колонка
 };
 
 struct SelectProjection
@@ -114,7 +119,28 @@ struct WhereLike
     Operand pattern;
 };
 
-using WhereCondition = std::variant<WhereComparison, WhereBetween, WhereLike>;
+struct WhereAnd;
+struct WhereOr;
+
+using WhereCondition = std::variant<
+    WhereComparison,
+    WhereBetween,
+    WhereLike,
+    std::unique_ptr<WhereAnd>,
+    std::unique_ptr<WhereOr>
+>;
+
+struct WhereAnd
+{
+    WhereCondition left;
+    WhereCondition right;
+};
+
+struct WhereOr
+{
+    WhereCondition left;
+    WhereCondition right;
+};
 
 struct SelectStmt
 {

@@ -108,6 +108,8 @@ set_target_properties(dbms PROPERTIES
 add_executable(dbms_grpc_server
     src/grpc/grpc_server_main.cpp
     src/grpc/sql_service_impl.cpp
+    src/grpc/access_logger.cpp
+    src/grpc/telemetry.cpp
     src/sql/lexer.cpp
     src/sql/parser.cpp
     src/sql/executor.cpp
@@ -219,9 +221,16 @@ add_test(NAME b_tree_tests COMMAND $<TARGET_FILE:dbms_tests>)
 add_test(NAME sql_lexer_tests COMMAND $<TARGET_FILE:dbms_sql_tests>)
 add_test(NAME sql_cli_tests COMMAND $<TARGET_FILE:dbms_cli_tests>)
 add_test(NAME all_tests COMMAND $<TARGET_FILE:dbms_all_tests>)
+add_test(
+    NAME grpc_smoke_test
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/grpc_smoke_test.sh
+        $<TARGET_FILE:dbms_grpc_server>
+        $<TARGET_FILE:dbms_grpc_client>
+)
 
 add_custom_target(run_all_tests
     COMMAND ${CMAKE_CTEST_COMMAND} --test-dir ${CMAKE_BINARY_DIR} --output-on-failure
     DEPENDS dbms_tests dbms_sql_tests dbms_cli_tests dbms_all_tests
+            dbms_grpc_server dbms_grpc_client
     USES_TERMINAL
 )

@@ -11,6 +11,8 @@
 #include <grpcpp/grpcpp.h>
 
 #include "dbms/core/dbms.h"
+#include "dbms/grpc/access_logger.h"
+#include "dbms/grpc/telemetry.h"
 #include "dbms/sql/sql_api.h"
 #include "sql_service.grpc.pb.h"
 
@@ -23,7 +25,9 @@ class SqlServiceImpl final : public dbms::rpc::SqlService::Service
 {
 public:
     explicit SqlServiceImpl(std::filesystem::path data_root = Dbms::default_data_root())
-        : _engine(std::move(data_root))
+        : _engine(data_root)
+        , _logger(data_root / "access.log")
+        , _telemetry(data_root / "telemetry.log")
     {
     }
 
@@ -41,6 +45,8 @@ public:
 
 private:
     Dbms _engine;
+    AccessLogger _logger;
+    TelemetryCollector _telemetry;
     std::mutex _mutex;
     std::uint64_t _next_session_id = 1;
     std::unordered_map<std::string, std::unique_ptr<SqlApi>> _sessions;

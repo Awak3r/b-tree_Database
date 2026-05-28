@@ -42,7 +42,12 @@ enum class Keyword
     bool_kw,
     not_kw,
     null_kw,
-    indexed_kw
+    indexed_kw,
+    default_kw,
+    or_kw,
+    sum_kw,
+    count_kw,
+    avg_kw
 };
 
 struct Token

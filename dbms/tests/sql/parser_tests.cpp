@@ -18,6 +18,8 @@ using dbms::UpdateStmt;
 using dbms::WhereComparison;
 using dbms::WhereBetween;
 using dbms::WhereLike;
+using dbms::WhereAnd;
+using dbms::WhereOr;
 
 TEST(parserTests, createTable)
 {
@@ -267,4 +269,188 @@ TEST(parserTests, deleteWithoutWhere)
 
     EXPECT_EQ(del->table_name, "users");
     EXPECT_FALSE(del->where.has_value());
+}
+
+// ============ AND / OR / скобки ============
+
+TEST(parserTests, whereAndProducesWhereAndNode)
+{
+    Lexer lexer("SELECT * FROM t WHERE a == 1 AND b == 2;");
+    Parser parser(lexer.tokenize());
+    Statement stmt = parser.parse_statement();
+    auto* select = std::get_if<SelectStmt>(&stmt);
+    ASSERT_NE(select, nullptr);
+    ASSERT_TRUE(select->where.has_value());
+
+    const auto* and_node = std::get_if<std::unique_ptr<dbms::WhereAnd>>(&select->where.value());
+    ASSERT_NE(and_node, nullptr);
+    ASSERT_NE(*and_node, nullptr);
+
+    // оба операнда — простые сравнения
+    const auto* left = std::get_if<WhereComparison>(&(*and_node)->left);
+    ASSERT_NE(left, nullptr);
+    EXPECT_EQ(left->op, ComparisonOp::eq);
+    const auto* lhs_col = std::get_if<ColumnRef>(&left->lhs);
+    ASSERT_NE(lhs_col, nullptr);
+    EXPECT_EQ(lhs_col->name, "a");
+
+    const auto* right = std::get_if<WhereComparison>(&(*and_node)->right);
+    ASSERT_NE(right, nullptr);
+    EXPECT_EQ(right->op, ComparisonOp::eq);
+    const auto* rhs_col = std::get_if<ColumnRef>(&right->lhs);
+    ASSERT_NE(rhs_col, nullptr);
+    EXPECT_EQ(rhs_col->name, "b");
+}
+
+TEST(parserTests, whereOrProducesWhereOrNode)
+{
+    Lexer lexer("SELECT * FROM t WHERE a == 1 OR b == 2;");
+    Parser parser(lexer.tokenize());
+    Statement stmt = parser.parse_statement();
+    auto* select = std::get_if<SelectStmt>(&stmt);
+    ASSERT_NE(select, nullptr);
+    ASSERT_TRUE(select->where.has_value());
+
+    const auto* or_node = std::get_if<std::unique_ptr<dbms::WhereOr>>(&select->where.value());
+    ASSERT_NE(or_node, nullptr);
+    ASSERT_NE(*or_node, nullptr);
+
+    const auto* left = std::get_if<WhereComparison>(&(*or_node)->left);
+    ASSERT_NE(left, nullptr);
+    EXPECT_EQ(left->op, ComparisonOp::eq);
+
+    const auto* right = std::get_if<WhereComparison>(&(*or_node)->right);
+    ASSERT_NE(right, nullptr);
+    EXPECT_EQ(right->op, ComparisonOp::eq);
+}
+
+// AND имеет более высокий приоритет, чем OR:
+// a == 1 OR b == 2 AND c == 3  =>  OR( a==1, AND(b==2, c==3) )
+TEST(parserTests, andPrecedenceHigherThanOr)
+{
+    Lexer lexer("SELECT * FROM t WHERE a == 1 OR b == 2 AND c == 3;");
+    Parser parser(lexer.tokenize());
+    Statement stmt = parser.parse_statement();
+    auto* select = std::get_if<SelectStmt>(&stmt);
+    ASSERT_NE(select, nullptr);
+    ASSERT_TRUE(select->where.has_value());
+
+    // корень — OR
+    const auto* or_node = std::get_if<std::unique_ptr<dbms::WhereOr>>(&select->where.value());
+    ASSERT_NE(or_node, nullptr);
+    ASSERT_NE(*or_node, nullptr);
+
+    // левый операнд OR — простое сравнение (a == 1)
+    const auto* left_cmp = std::get_if<WhereComparison>(&(*or_node)->left);
+    ASSERT_NE(left_cmp, nullptr);
+    const auto* left_col = std::get_if<ColumnRef>(&left_cmp->lhs);
+    ASSERT_NE(left_col, nullptr);
+    EXPECT_EQ(left_col->name, "a");
+
+    // правый операнд OR — AND(b==2, c==3)
+    const auto* right_and = std::get_if<std::unique_ptr<dbms::WhereAnd>>(&(*or_node)->right);
+    ASSERT_NE(right_and, nullptr);
+    ASSERT_NE(*right_and, nullptr);
+
+    const auto* and_left = std::get_if<WhereComparison>(&(*right_and)->left);
+    ASSERT_NE(and_left, nullptr);
+    const auto* and_left_col = std::get_if<ColumnRef>(&and_left->lhs);
+    ASSERT_NE(and_left_col, nullptr);
+    EXPECT_EQ(and_left_col->name, "b");
+
+    const auto* and_right = std::get_if<WhereComparison>(&(*right_and)->right);
+    ASSERT_NE(and_right, nullptr);
+    const auto* and_right_col = std::get_if<ColumnRef>(&and_right->lhs);
+    ASSERT_NE(and_right_col, nullptr);
+    EXPECT_EQ(and_right_col->name, "c");
+}
+
+// Скобки переопределяют приоритет:
+// (a == 1 OR b == 2) AND c == 3  =>  AND( OR(a==1, b==2), c==3 )
+TEST(parserTests, parenthesesOverridePrecedence)
+{
+    Lexer lexer("SELECT * FROM t WHERE (a == 1 OR b == 2) AND c == 3;");
+    Parser parser(lexer.tokenize());
+    Statement stmt = parser.parse_statement();
+    auto* select = std::get_if<SelectStmt>(&stmt);
+    ASSERT_NE(select, nullptr);
+    ASSERT_TRUE(select->where.has_value());
+
+    // корень — AND
+    const auto* and_node = std::get_if<std::unique_ptr<dbms::WhereAnd>>(&select->where.value());
+    ASSERT_NE(and_node, nullptr);
+    ASSERT_NE(*and_node, nullptr);
+
+    // левый операнд AND — OR(a==1, b==2)
+    const auto* left_or = std::get_if<std::unique_ptr<dbms::WhereOr>>(&(*and_node)->left);
+    ASSERT_NE(left_or, nullptr);
+    ASSERT_NE(*left_or, nullptr);
+
+    // правый операнд AND — простое сравнение (c == 3)
+    const auto* right_cmp = std::get_if<WhereComparison>(&(*and_node)->right);
+    ASSERT_NE(right_cmp, nullptr);
+    const auto* right_col = std::get_if<ColumnRef>(&right_cmp->lhs);
+    ASSERT_NE(right_col, nullptr);
+    EXPECT_EQ(right_col->name, "c");
+}
+
+// Цепочка AND левоассоциативна: a AND b AND c => AND(AND(a,b), c)
+TEST(parserTests, chainedAndIsLeftAssociative)
+{
+    Lexer lexer("SELECT * FROM t WHERE a == 1 AND b == 2 AND c == 3;");
+    Parser parser(lexer.tokenize());
+    Statement stmt = parser.parse_statement();
+    auto* select = std::get_if<SelectStmt>(&stmt);
+    ASSERT_NE(select, nullptr);
+    ASSERT_TRUE(select->where.has_value());
+
+    // корень — AND
+    const auto* outer_and = std::get_if<std::unique_ptr<dbms::WhereAnd>>(&select->where.value());
+    ASSERT_NE(outer_and, nullptr);
+    ASSERT_NE(*outer_and, nullptr);
+
+    // правый — c==3
+    const auto* right_cmp = std::get_if<WhereComparison>(&(*outer_and)->right);
+    ASSERT_NE(right_cmp, nullptr);
+    const auto* right_col = std::get_if<ColumnRef>(&right_cmp->lhs);
+    ASSERT_NE(right_col, nullptr);
+    EXPECT_EQ(right_col->name, "c");
+
+    // левый — AND(a==1, b==2)
+    const auto* inner_and = std::get_if<std::unique_ptr<dbms::WhereAnd>>(&(*outer_and)->left);
+    ASSERT_NE(inner_and, nullptr);
+    ASSERT_NE(*inner_and, nullptr);
+
+    const auto* inner_left = std::get_if<WhereComparison>(&(*inner_and)->left);
+    ASSERT_NE(inner_left, nullptr);
+    const auto* inner_left_col = std::get_if<ColumnRef>(&inner_left->lhs);
+    ASSERT_NE(inner_left_col, nullptr);
+    EXPECT_EQ(inner_left_col->name, "a");
+}
+
+// AND/OR работает в DELETE и UPDATE тоже
+TEST(parserTests, deleteWhereOr)
+{
+    Lexer lexer("DELETE FROM users WHERE id == 1 OR id == 2;");
+    Parser parser(lexer.tokenize());
+    Statement stmt = parser.parse_statement();
+    auto* del = std::get_if<DeleteStmt>(&stmt);
+    ASSERT_NE(del, nullptr);
+    ASSERT_TRUE(del->where.has_value());
+
+    const auto* or_node = std::get_if<std::unique_ptr<dbms::WhereOr>>(&del->where.value());
+    ASSERT_NE(or_node, nullptr);
+}
+
+TEST(parserTests, updateWhereAnd)
+{
+    Lexer lexer("UPDATE users SET age = 30 WHERE name == \"alice\" AND age < 25;");
+    Parser parser(lexer.tokenize());
+    Statement stmt = parser.parse_statement();
+    auto* upd = std::get_if<UpdateStmt>(&stmt);
+    ASSERT_NE(upd, nullptr);
+    ASSERT_TRUE(upd->where.has_value());
+
+    const auto* and_node = std::get_if<std::unique_ptr<dbms::WhereAnd>>(&upd->where.value());
+    ASSERT_NE(and_node, nullptr);
 }

@@ -241,6 +241,15 @@ ColumnDef Parser::parse_column_def()
             col.indexed = true;
             advanced = true;
         }
+        if (match_keyword(Keyword::default_kw)) {
+            InsertValue val = parse_insert_value();
+            if (val.is_null) {
+                col.default_value = std::nullopt;
+            } else {
+                col.default_value = val.text;
+            }
+            advanced = true;
+        }
     }
     return col;
 }
@@ -304,7 +313,26 @@ SelectProjection Parser::parse_select_projection()
 SelectItem Parser::parse_select_item()
 {
     SelectItem item{};
-    item.column_name = parse_name();
+
+    AggregateFunc agg{};
+    bool is_agg = false;
+    if (match_keyword(Keyword::sum_kw)) {
+        agg = AggregateFunc::sum; is_agg = true;
+    } else if (match_keyword(Keyword::count_kw)) {
+        agg = AggregateFunc::count; is_agg = true;
+    } else if (match_keyword(Keyword::avg_kw)) {
+        agg = AggregateFunc::avg; is_agg = true;
+    }
+
+    if (is_agg) {
+        expect_symbol('(');
+        item.column_name = parse_name();
+        expect_symbol(')');
+        item.aggregate = agg;
+    } else {
+        item.column_name = parse_name();
+    }
+
     if (match_keyword(Keyword::as_kw)) {
         item.alias = parse_name();
     }
@@ -368,6 +396,37 @@ ComparisonOp Parser::parse_comparison_op()
 
 WhereCondition Parser::parse_select_where()
 {
+    return parse_where_or();
+}
+
+WhereCondition Parser::parse_where_or()
+{
+    WhereCondition left = parse_where_and();
+    while (match_keyword(Keyword::or_kw)) {
+        WhereCondition right = parse_where_and();
+        left = std::make_unique<WhereOr>(WhereOr{std::move(left), std::move(right)});
+    }
+    return left;
+}
+
+WhereCondition Parser::parse_where_and()
+{
+    WhereCondition left = parse_where_atom();
+    while (match_keyword(Keyword::and_kw)) {
+        WhereCondition right = parse_where_atom();
+        left = std::make_unique<WhereAnd>(WhereAnd{std::move(left), std::move(right)});
+    }
+    return left;
+}
+
+WhereCondition Parser::parse_where_atom()
+{
+    if (match_symbol('(')) {
+        WhereCondition cond = parse_where_or();
+        expect_symbol(')');
+        return cond;
+    }
+
     Operand lhs = parse_operand();
 
     if (match_keyword(Keyword::between_kw)) {

@@ -161,6 +161,13 @@ private:
             out.insert(out.end(), col.type.begin(), col.type.end());
             write_int(out, col.not_null ? 1 : 0);
             write_int(out, col.indexed ? 1 : 0);
+            if (col.default_value.has_value()) {
+                write_int(out, 1);
+                write_int(out, static_cast<int>(col.default_value->size()));
+                out.insert(out.end(), col.default_value->begin(), col.default_value->end());
+            } else {
+                write_int(out, 0);
+            }
         }
         return out;
     }
@@ -203,6 +210,18 @@ private:
             col.type = std::move(type);
             col.not_null = (not_null != 0);
             col.indexed = (indexed != 0);
+            if (cursor + sizeof(int) <= end) {
+                int has_default = read_int(cursor);
+                cursor += sizeof(int);
+                if (has_default && cursor + sizeof(int) <= end) {
+                    int def_len = read_int(cursor);
+                    cursor += sizeof(int);
+                    if (def_len >= 0 && cursor + def_len <= end) {
+                        col.default_value = std::string(reinterpret_cast<const char*>(cursor), static_cast<std::size_t>(def_len));
+                        cursor += def_len;
+                    }
+                }
+            }
             columns.push_back(std::move(col));
         }
         return columns;

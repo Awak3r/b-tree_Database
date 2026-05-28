@@ -1,10 +1,10 @@
-Start testing: May 23 00:54 CEST
+Start testing: May 28 23:41 CEST
 ----------------------------------------------------------
-1/4 Testing: b_tree_tests
-1/4 Test: b_tree_tests
+1/5 Testing: b_tree_tests
+1/5 Test: b_tree_tests
 Command: "/home/study/coursework/dbms/build/tests/bin/dbms_tests"
 Directory: /home/study/coursework/dbms/build
-"b_tree_tests" start time: May 23 00:54 CEST
+"b_tree_tests" start time: May 28 23:41 CEST
 Output:
 ----------------------------------------------------------
 [==========] Running 7 tests from 2 test suites.
@@ -13,41 +13,41 @@ Output:
 [ RUN      ] bTreeDiskIndexPositiveTests.test0
 [       OK ] bTreeDiskIndexPositiveTests.test0 (0 ms)
 [ RUN      ] bTreeDiskIndexPositiveTests.test1
-[       OK ] bTreeDiskIndexPositiveTests.test1 (8 ms)
+[       OK ] bTreeDiskIndexPositiveTests.test1 (3 ms)
 [ RUN      ] bTreeDiskIndexPositiveTests.test2
-[       OK ] bTreeDiskIndexPositiveTests.test2 (6 ms)
+[       OK ] bTreeDiskIndexPositiveTests.test2 (3 ms)
 [ RUN      ] bTreeDiskIndexPositiveTests.test3
-[       OK ] bTreeDiskIndexPositiveTests.test3 (3 ms)
+[       OK ] bTreeDiskIndexPositiveTests.test3 (1 ms)
 [ RUN      ] bTreeDiskIndexPositiveTests.test4
-[       OK ] bTreeDiskIndexPositiveTests.test4 (1 ms)
-[----------] 5 tests from bTreeDiskIndexPositiveTests (20 ms total)
+[       OK ] bTreeDiskIndexPositiveTests.test4 (0 ms)
+[----------] 5 tests from bTreeDiskIndexPositiveTests (9 ms total)
 
 [----------] 2 tests from bTreeDiskIndexNegativeTests
 [ RUN      ] bTreeDiskIndexNegativeTests.test1
 [       OK ] bTreeDiskIndexNegativeTests.test1 (0 ms)
 [ RUN      ] bTreeDiskIndexNegativeTests.insertReturnsFalseWhenIndexPathIsDirectory
-[       OK ] bTreeDiskIndexNegativeTests.insertReturnsFalseWhenIndexPathIsDirectory (13 ms)
-[----------] 2 tests from bTreeDiskIndexNegativeTests (13 ms total)
+[       OK ] bTreeDiskIndexNegativeTests.insertReturnsFalseWhenIndexPathIsDirectory (0 ms)
+[----------] 2 tests from bTreeDiskIndexNegativeTests (0 ms total)
 
 [----------] Global test environment tear-down
-[==========] 7 tests from 2 test suites ran. (34 ms total)
+[==========] 7 tests from 2 test suites ran. (10 ms total)
 [  PASSED  ] 7 tests.
 <end of output>
-Test time =   0.04 sec
+Test time =   0.01 sec
 ----------------------------------------------------------
 Test Passed.
-"b_tree_tests" end time: May 23 00:54 CEST
+"b_tree_tests" end time: May 28 23:41 CEST
 "b_tree_tests" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-2/4 Testing: sql_lexer_tests
-2/4 Test: sql_lexer_tests
+2/5 Testing: sql_lexer_tests
+2/5 Test: sql_lexer_tests
 Command: "/home/study/coursework/dbms/build/tests/bin/dbms_sql_tests"
 Directory: /home/study/coursework/dbms/build
-"sql_lexer_tests" start time: May 23 00:54 CEST
+"sql_lexer_tests" start time: May 28 23:41 CEST
 Output:
 ----------------------------------------------------------
-[==========] Running 50 tests from 3 test suites.
+[==========] Running 73 tests from 3 test suites.
 [----------] Global test environment set-up.
 [----------] 9 tests from lexerTests
 [ RUN      ] lexerTests.createTable
@@ -70,7 +70,7 @@ Output:
 [       OK ] lexerTests.comparisonOperators (0 ms)
 [----------] 9 tests from lexerTests (0 ms total)
 
-[----------] 12 tests from parserTests
+[----------] 19 tests from parserTests
 [ RUN      ] parserTests.createTable
 [       OK ] parserTests.createTable (0 ms)
 [ RUN      ] parserTests.dropTable
@@ -95,11 +95,25 @@ Output:
 [       OK ] parserTests.deleteWithWhereComparison (0 ms)
 [ RUN      ] parserTests.deleteWithoutWhere
 [       OK ] parserTests.deleteWithoutWhere (0 ms)
-[----------] 12 tests from parserTests (0 ms total)
+[ RUN      ] parserTests.whereAndProducesWhereAndNode
+[       OK ] parserTests.whereAndProducesWhereAndNode (0 ms)
+[ RUN      ] parserTests.whereOrProducesWhereOrNode
+[       OK ] parserTests.whereOrProducesWhereOrNode (0 ms)
+[ RUN      ] parserTests.andPrecedenceHigherThanOr
+[       OK ] parserTests.andPrecedenceHigherThanOr (0 ms)
+[ RUN      ] parserTests.parenthesesOverridePrecedence
+[       OK ] parserTests.parenthesesOverridePrecedence (0 ms)
+[ RUN      ] parserTests.chainedAndIsLeftAssociative
+[       OK ] parserTests.chainedAndIsLeftAssociative (0 ms)
+[ RUN      ] parserTests.deleteWhereOr
+[       OK ] parserTests.deleteWhereOr (0 ms)
+[ RUN      ] parserTests.updateWhereAnd
+[       OK ] parserTests.updateWhereAnd (0 ms)
+[----------] 19 tests from parserTests (1 ms total)
 
-[----------] 29 tests from executorTests
+[----------] 45 tests from executorTests
 [ RUN      ] executorTests.createDropUse
-[       OK ] executorTests.createDropUse (4 ms)
+[       OK ] executorTests.createDropUse (0 ms)
 [ RUN      ] executorTests.duplicateDatabase
 [       OK ] executorTests.duplicateDatabase (0 ms)
 [ RUN      ] executorTests.createDropTable
@@ -131,19 +145,19 @@ Output:
 [ RUN      ] executorTests.indexedStringRejectsValuesLongerThanKeyLimit
 [       OK ] executorTests.indexedStringRejectsValuesLongerThanKeyLimit (1 ms)
 [ RUN      ] executorTests.selectFailsForUnknownProjectionColumn
-[       OK ] executorTests.selectFailsForUnknownProjectionColumn (9 ms)
+[       OK ] executorTests.selectFailsForUnknownProjectionColumn (0 ms)
 [ RUN      ] executorTests.updateWithWhereChangesRow
-[       OK ] executorTests.updateWithWhereChangesRow (6 ms)
+[       OK ] executorTests.updateWithWhereChangesRow (1 ms)
 [ RUN      ] executorTests.updateIndexedKeyUpdatesIndexLookup
 [       OK ] executorTests.updateIndexedKeyUpdatesIndexLookup (1 ms)
 [ RUN      ] executorTests.updateIndexedKeyDuplicateFails
 [       OK ] executorTests.updateIndexedKeyDuplicateFails (1 ms)
 [ RUN      ] executorTests.updateNotNullToNullFails
-[       OK ] executorTests.updateNotNullToNullFails (1 ms)
+[       OK ] executorTests.updateNotNullToNullFails (0 ms)
 [ RUN      ] executorTests.updateWithoutWhereUpdatesAllRows
 [       OK ] executorTests.updateWithoutWhereUpdatesAllRows (1 ms)
 [ RUN      ] executorTests.updateIndexedKeyStressSequenceKeepsIndexConsistent
-[       OK ] executorTests.updateIndexedKeyStressSequenceKeepsIndexConsistent (15 ms)
+[       OK ] executorTests.updateIndexedKeyStressSequenceKeepsIndexConsistent (10 ms)
 [ RUN      ] executorTests.deleteWithWhereRemovesRow
 [       OK ] executorTests.deleteWithWhereRemovesRow (1 ms)
 [ RUN      ] executorTests.deleteIndexedKeyRemovesFromIndex
@@ -153,27 +167,59 @@ Output:
 [ RUN      ] executorTests.deleteWithoutWhereRemovesAllRows
 [       OK ] executorTests.deleteWithoutWhereRemovesAllRows (1 ms)
 [ RUN      ] executorTests.deleteWhereNoMatchesDoesNothing
-[       OK ] executorTests.deleteWhereNoMatchesDoesNothing (0 ms)
+[       OK ] executorTests.deleteWhereNoMatchesDoesNothing (1 ms)
 [ RUN      ] executorTests.deleteWithoutWhereClearsAllIndexedKeys
 [       OK ] executorTests.deleteWithoutWhereClearsAllIndexedKeys (1 ms)
-[----------] 29 tests from executorTests (79 ms total)
+[ RUN      ] executorTests.selectWhereAndFiltersRows
+[       OK ] executorTests.selectWhereAndFiltersRows (0 ms)
+[ RUN      ] executorTests.selectWhereOrFiltersRows
+[       OK ] executorTests.selectWhereOrFiltersRows (0 ms)
+[ RUN      ] executorTests.selectWhereAndPrecedenceOverOr
+[       OK ] executorTests.selectWhereAndPrecedenceOverOr (0 ms)
+[ RUN      ] executorTests.selectWhereParenthesesOverridePrecedence
+[       OK ] executorTests.selectWhereParenthesesOverridePrecedence (1 ms)
+[ RUN      ] executorTests.selectWhereAndBothFalseReturnsEmpty
+[       OK ] executorTests.selectWhereAndBothFalseReturnsEmpty (0 ms)
+[ RUN      ] executorTests.selectWhereOrAllFalseReturnsEmpty
+[       OK ] executorTests.selectWhereOrAllFalseReturnsEmpty (0 ms)
+[ RUN      ] executorTests.updateWhereAndOnlyMatchingRows
+[       OK ] executorTests.updateWhereAndOnlyMatchingRows (1 ms)
+[ RUN      ] executorTests.deleteWhereOrRemovesMatchingRows
+[       OK ] executorTests.deleteWhereOrRemovesMatchingRows (0 ms)
+[ RUN      ] executorTests.whereAndWithUnknownColumnFails
+[       OK ] executorTests.whereAndWithUnknownColumnFails (0 ms)
+[ RUN      ] executorTests.whereOrWithUnknownColumnFails
+[       OK ] executorTests.whereOrWithUnknownColumnFails (0 ms)
+[ RUN      ] executorTests.selectWhereComplexNestedCondition
+[       OK ] executorTests.selectWhereComplexNestedCondition (0 ms)
+[ RUN      ] executorTests.aggregateSumCountAvg
+[       OK ] executorTests.aggregateSumCountAvg (2 ms)
+[ RUN      ] executorTests.aggregateWithWhereFilter
+[       OK ] executorTests.aggregateWithWhereFilter (1 ms)
+[ RUN      ] executorTests.aggregateOnEmptyResultSet
+[       OK ] executorTests.aggregateOnEmptyResultSet (1 ms)
+[ RUN      ] executorTests.aggregateAliasRenamesColumn
+[       OK ] executorTests.aggregateAliasRenamesColumn (1 ms)
+[ RUN      ] executorTests.aggregateUnknownColumnFails
+[       OK ] executorTests.aggregateUnknownColumnFails (1 ms)
+[----------] 45 tests from executorTests (59 ms total)
 
 [----------] Global test environment tear-down
-[==========] 50 tests from 3 test suites ran. (80 ms total)
-[  PASSED  ] 50 tests.
+[==========] 73 tests from 3 test suites ran. (62 ms total)
+[  PASSED  ] 73 tests.
 <end of output>
-Test time =   0.09 sec
+Test time =   0.07 sec
 ----------------------------------------------------------
 Test Passed.
-"sql_lexer_tests" end time: May 23 00:54 CEST
+"sql_lexer_tests" end time: May 28 23:41 CEST
 "sql_lexer_tests" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-3/4 Testing: sql_cli_tests
-3/4 Test: sql_cli_tests
+3/5 Testing: sql_cli_tests
+3/5 Test: sql_cli_tests
 Command: "/home/study/coursework/dbms/build/tests/bin/dbms_cli_tests"
 Directory: /home/study/coursework/dbms/build
-"sql_cli_tests" start time: May 23 00:54 CEST
+"sql_cli_tests" start time: May 28 23:41 CEST
 Output:
 ----------------------------------------------------------
 Running main() from /home/study/coursework/dbms/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -185,33 +231,33 @@ Running main() from /home/study/coursework/dbms/build/_deps/googletest-src/googl
 [ RUN      ] cliScriptTests.invalidArgcPrintsUsageAndReturnsNonZero
 [       OK ] cliScriptTests.invalidArgcPrintsUsageAndReturnsNonZero (0 ms)
 [ RUN      ] cliScriptTests.multilineScriptExecutesSuccessfully
-[       OK ] cliScriptTests.multilineScriptExecutesSuccessfully (5 ms)
+[       OK ] cliScriptTests.multilineScriptExecutesSuccessfully (1 ms)
 [ RUN      ] cliScriptTests.continuesAfterSqlErrorAndReturnsNonZero
-[       OK ] cliScriptTests.continuesAfterSqlErrorAndReturnsNonZero (0 ms)
+[       OK ] cliScriptTests.continuesAfterSqlErrorAndReturnsNonZero (1 ms)
 [ RUN      ] cliScriptTests.semicolonInsideStringIsNotStatementDelimiter
-[       OK ] cliScriptTests.semicolonInsideStringIsNotStatementDelimiter (0 ms)
+[       OK ] cliScriptTests.semicolonInsideStringIsNotStatementDelimiter (1 ms)
 [ RUN      ] cliScriptTests.tailStatementWithoutFinalSemicolonFails
 [       OK ] cliScriptTests.tailStatementWithoutFinalSemicolonFails (0 ms)
 [ RUN      ] cliScriptTests.stressScriptWithManyStatementsStaysStable
-[       OK ] cliScriptTests.stressScriptWithManyStatementsStaysStable (71 ms)
-[----------] 7 tests from cliScriptTests (79 ms total)
+[       OK ] cliScriptTests.stressScriptWithManyStatementsStaysStable (59 ms)
+[----------] 7 tests from cliScriptTests (64 ms total)
 
 [----------] Global test environment tear-down
-[==========] 7 tests from 1 test suite ran. (80 ms total)
+[==========] 7 tests from 1 test suite ran. (64 ms total)
 [  PASSED  ] 7 tests.
 <end of output>
-Test time =   0.08 sec
+Test time =   0.07 sec
 ----------------------------------------------------------
 Test Passed.
-"sql_cli_tests" end time: May 23 00:54 CEST
+"sql_cli_tests" end time: May 28 23:41 CEST
 "sql_cli_tests" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-4/4 Testing: all_tests
-4/4 Test: all_tests
+4/5 Testing: all_tests
+4/5 Test: all_tests
 Command: "/home/study/coursework/dbms/build/tests/bin/dbms_all_tests"
 Directory: /home/study/coursework/dbms/build
-"all_tests" start time: May 23 00:54 CEST
+"all_tests" start time: May 28 23:41 CEST
 Output:
 ----------------------------------------------------------
 Running main() from /home/study/coursework/dbms/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -233,9 +279,9 @@ Running main() from /home/study/coursework/dbms/build/_deps/googletest-src/googl
 [ RUN      ] tzPoint0Pass.IndexedConstraintIsUniqueAndNotNull
 [       OK ] tzPoint0Pass.IndexedConstraintIsUniqueAndNotNull (0 ms)
 [ RUN      ] tzPoint0Pass.InsertBatchRollsBackWhenLaterRowIsTooLarge
-[       OK ] tzPoint0Pass.InsertBatchRollsBackWhenLaterRowIsTooLarge (1 ms)
+[       OK ] tzPoint0Pass.InsertBatchRollsBackWhenLaterRowIsTooLarge (0 ms)
 [ RUN      ] tzPoint0Pass.InsertRollsBackTablePageWhenIndexCannotBeWritten
-[       OK ] tzPoint0Pass.InsertRollsBackTablePageWhenIndexCannotBeWritten (0 ms)
+[       OK ] tzPoint0Pass.InsertRollsBackTablePageWhenIndexCannotBeWritten (1 ms)
 [ RUN      ] tzPoint0Pass.InsertRollsBackPreviouslyWrittenIndexWhenLaterIndexFails
 [       OK ] tzPoint0Pass.InsertRollsBackPreviouslyWrittenIndexWhenLaterIndexFails (1 ms)
 [ RUN      ] tzPoint0Pass.UpdateIndexedDuplicateKeepsTableAndIndexUnchanged
@@ -251,9 +297,9 @@ Running main() from /home/study/coursework/dbms/build/_deps/googletest-src/googl
 [ RUN      ] tzPoint0Pass.DeleteRollsBackEarlierIndexWhenLaterIndexFails
 [       OK ] tzPoint0Pass.DeleteRollsBackEarlierIndexWhenLaterIndexFails (1 ms)
 [ RUN      ] tzPoint0Pass.LongInsertUpdateDeleteSequenceStaysConsistentAfterRestart
-[       OK ] tzPoint0Pass.LongInsertUpdateDeleteSequenceStaysConsistentAfterRestart (5 ms)
+[       OK ] tzPoint0Pass.LongInsertUpdateDeleteSequenceStaysConsistentAfterRestart (6 ms)
 [ RUN      ] tzPoint0Pass.SameTableNamesInDifferentDatabasesKeepSeparateIndexesAfterRestart
-[       OK ] tzPoint0Pass.SameTableNamesInDifferentDatabasesKeepSeparateIndexesAfterRestart (2 ms)
+[       OK ] tzPoint0Pass.SameTableNamesInDifferentDatabasesKeepSeparateIndexesAfterRestart (3 ms)
 [ RUN      ] tzPoint0Pass.MissingIndexFileReturnsInformativeRuntimeError
 [       OK ] tzPoint0Pass.MissingIndexFileReturnsInformativeRuntimeError (0 ms)
 [ RUN      ] tzPoint0Pass.TruncatedTablePageReturnsInformativeRuntimeError
@@ -261,11 +307,11 @@ Running main() from /home/study/coursework/dbms/build/_deps/googletest-src/googl
 [ RUN      ] tzPoint0Pass.CorruptedIndexRidReturnsInformativeRuntimeError
 [       OK ] tzPoint0Pass.CorruptedIndexRidReturnsInformativeRuntimeError (0 ms)
 [ RUN      ] tzPoint0Pass.DeleteWithIndexedConditionFailsCleanlyWhenSlotWasAlreadyDeleted
-[       OK ] tzPoint0Pass.DeleteWithIndexedConditionFailsCleanlyWhenSlotWasAlreadyDeleted (0 ms)
+[       OK ] tzPoint0Pass.DeleteWithIndexedConditionFailsCleanlyWhenSlotWasAlreadyDeleted (1 ms)
 [ RUN      ] tzPoint0Pass.CreateTableRollsBackWhenOneIndexCannotBeCreated
 [       OK ] tzPoint0Pass.CreateTableRollsBackWhenOneIndexCannotBeCreated (0 ms)
 [ RUN      ] tzPoint0Pass.DropTableFailsBeforeRemovingTableWhenIndexPathIsCorrupted
-[       OK ] tzPoint0Pass.DropTableFailsBeforeRemovingTableWhenIndexPathIsCorrupted (0 ms)
+[       OK ] tzPoint0Pass.DropTableFailsBeforeRemovingTableWhenIndexPathIsCorrupted (1 ms)
 [ RUN      ] tzPoint0Pass.ColumnTypeValidationWorks
 [       OK ] tzPoint0Pass.ColumnTypeValidationWorks (0 ms)
 [ RUN      ] tzPoint0Pass.UsesIndexForIndexedCondition
@@ -292,13 +338,13 @@ Running main() from /home/study/coursework/dbms/build/_deps/googletest-src/googl
 [       OK ] tzPoint0Pass.StringComparisonIsLexicographic (1 ms)
 [ RUN      ] tzPoint0Pass.ConditionSupportsLiteralOnEitherSideAndColumnVsColumn
 [       OK ] tzPoint0Pass.ConditionSupportsLiteralOnEitherSideAndColumnVsColumn (1 ms)
-[----------] 37 tests from tzPoint0Pass (47 ms total)
+[----------] 37 tests from tzPoint0Pass (51 ms total)
 
 [----------] 9 tests from tzPoint0SpecGaps
 [ RUN      ] tzPoint0SpecGaps.InteractiveModeShouldSupportMultilineStatementsBySemicolon
 [       OK ] tzPoint0SpecGaps.InteractiveModeShouldSupportMultilineStatementsBySemicolon (0 ms)
 [ RUN      ] tzPoint0SpecGaps.DataShouldSurviveRestartWithSameDataRoot
-[       OK ] tzPoint0SpecGaps.DataShouldSurviveRestartWithSameDataRoot (1 ms)
+[       OK ] tzPoint0SpecGaps.DataShouldSurviveRestartWithSameDataRoot (0 ms)
 [ RUN      ] tzPoint0SpecGaps.IndexedColumnShouldCreateIndexAtTableCreationTime
 [       OK ] tzPoint0SpecGaps.IndexedColumnShouldCreateIndexAtTableCreationTime (0 ms)
 [ RUN      ] tzPoint0SpecGaps.MixedCaseKeywordInOneWordShouldBeRejected
@@ -316,14 +362,30 @@ Running main() from /home/study/coursework/dbms/build/_deps/googletest-src/googl
 [----------] 9 tests from tzPoint0SpecGaps (7 ms total)
 
 [----------] Global test environment tear-down
-[==========] 46 tests from 2 test suites ran. (54 ms total)
+[==========] 46 tests from 2 test suites ran. (58 ms total)
 [  PASSED  ] 46 tests.
 <end of output>
-Test time =   0.06 sec
+Test time =   0.07 sec
 ----------------------------------------------------------
 Test Passed.
-"all_tests" end time: May 23 00:54 CEST
+"all_tests" end time: May 28 23:41 CEST
 "all_tests" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-End testing: May 23 00:54 CEST
+5/5 Testing: grpc_smoke_test
+5/5 Test: grpc_smoke_test
+Command: "/home/study/coursework/dbms/tests/grpc_smoke_test.sh" "/home/study/coursework/dbms/build/dbms_grpc_server" "/home/study/coursework/dbms/build/dbms_grpc_client"
+Directory: /home/study/coursework/dbms/build
+"grpc_smoke_test" start time: May 28 23:41 CEST
+Output:
+----------------------------------------------------------
+PASS: gRPC smoke test
+<end of output>
+Test time =   0.40 sec
+----------------------------------------------------------
+Test Passed.
+"grpc_smoke_test" end time: May 28 23:41 CEST
+"grpc_smoke_test" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: May 28 23:41 CEST
