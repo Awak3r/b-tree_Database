@@ -32,7 +32,7 @@
   `database.table` для `INSERT`, `SELECT`, `UPDATE`, `DELETE`.
 - Условия `WHERE`:
   - сравнения `==`, `!=`, `<`, `>`, `<=`, `>=`;
-  - `BETWEEN`, полуинтервал `[left, right)`;
+  - `BETWEEN`, закрытый интервал `[left, right]`;
   - `LIKE` с регулярным выражением.
 - Результат успешного `SELECT` печатается как JSON-массив объектов.
 - Команды могут занимать несколько строк и завершаются `;`.
@@ -193,7 +193,7 @@ WHERE indexed_column BETWEEN left_literal AND right_literal
 WHERE 10 <= indexed_column
 ```
 
-Для `BETWEEN` используется полуинтервал `[left_literal, right_literal)`.
+Для `BETWEEN` используется закрытый интервал `[left_literal, right_literal]`.
 
 Для `!=`, неиндексируемых колонок, column-vs-column сравнений и `LIKE`
 используется full scan.

@@ -1,0 +1,22 @@
+Телеметрия
+docker exec -it dbms_telemetry /bin/bash
+tail -f /data/telemetry.log
+
+for i in $(seq 1 20); do
+  echo "CREATE DATABASE t$i; USE t$i; CREATE TABLE u (id INT INDEXED); INSERT INTO u (id) VALUE (1),(2),(3);" \
+  | docker run --rm -i --network host awak3r/dbms-client:latest 127.0.0.1:50057
+done
+
+Демонстрация 
+DBMS_DATA_ROOT=/tmp/demo ./build/prog scripts/demo_point0.sql
+
+Обработка ошибок
+DBMS_DATA_ROOT=/tmp/demo2 ./build/prog scripts/demo_constraints_errors.sql
+
+Персистентность
+DBMS_DATA_ROOT=/tmp/demo3 ./build/prog scripts/demo_restart_seed.sql
+DBMS_DATA_ROOT=/tmp/demo3 ./build/prog scripts/demo_restart_check.sql
+
+клиент-сервер
+docker run -d --name dbms -p 50051:50051 -v /tmp/dbdata:/data awak3r/dbms-server:latest
+docker run --rm -it --network host awak3r/dbms-client:latest 194.150.220.189:50051
